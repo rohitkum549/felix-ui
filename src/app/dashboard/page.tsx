@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Activity,
   ArrowUpRight,
@@ -6,6 +8,7 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
+import * as React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -34,20 +37,24 @@ import {
 } from 'recharts';
 
 export default function DashboardPage() {
-  const data = [
-    { name: 'Jan', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Feb', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Mar', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Apr', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'May', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Jun', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Jul', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Aug', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Sep', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Oct', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Nov', total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: 'Dec', total: Math.floor(Math.random() * 5000) + 1000 },
-  ];
+  const [data, setData] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    setData([
+      { name: 'Jan', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Feb', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Mar', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Apr', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'May', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Jun', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Jul', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Aug', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Sep', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Oct', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Nov', total: Math.floor(Math.random() * 5000) + 1000 },
+      { name: 'Dec', total: Math.floor(Math.random() * 5000) + 1000 },
+    ]);
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col gap-4 md:gap-8">
