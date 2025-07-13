@@ -45,14 +45,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const initializeAuth = async () => {
     try {
       setIsLoading(true)
+      console.log("🔑 Initializing Keycloak authentication...")
       const authenticated = await keycloakService.init()
+      console.log("🔑 Keycloak init result:", authenticated)
+      
       if (authenticated || keycloakService.isAuthenticated()) {
+        console.log("✅ User is authenticated, loading profile...")
         await loadUserProfile()
         setIsAuthenticated(true)
+        console.log("✅ Authentication successful")
       } else {
+        console.log("❌ User is not authenticated")
         setIsAuthenticated(false)
       }
     } catch (error) {
+      console.error("❌ Authentication initialization failed:", error)
       setIsAuthenticated(false)
     } finally {
       setIsLoading(false)
@@ -99,6 +106,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await keycloakService.logout()
       setUser(null)
       setIsAuthenticated(false)
+      // Clear all tokens and storage
+      localStorage.removeItem("felix_access_token")
+      localStorage.removeItem("felix_refresh_token")
+      localStorage.removeItem("felix_user_info")
     } finally {
       setIsLoading(false)
     }
