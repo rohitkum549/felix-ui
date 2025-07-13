@@ -1,7 +1,9 @@
+import { API_CONFIG } from './api-config'
+
 // Felix Blockchain API Service Layer
 class FelixApiService {
-  private baseURL = "https://api.felix.blockchain.com"
-  private stellarEndpoint = "https://horizon.stellar.org"
+  private baseURL = API_CONFIG.BASE_URL
+  private stellarEndpoint = API_CONFIG.STELLAR_ENDPOINT
   private token: string | null = null
 
   setAuthToken(token: string) {
@@ -20,13 +22,33 @@ class FelixApiService {
       ...options,
     }
 
-    const response = await fetch(url, config)
+    try {
+      const response = await fetch(url, config)
 
-    if (!response.ok) {
-      throw new Error(`Felix API Error: ${response.statusText}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Felix API Error: ${response.statusText} - ${errorText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Network error: Unable to connect to the server. Please check if the backend is running.')
+      }
+      throw error
     }
+  }
 
-    return response.json()
+  // Authentication APIs
+  async login(email: string, password: string) {
+    const response = await this.request<{ message: string, user: any }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    })
+    return response
   }
 
   // Dashboard APIs

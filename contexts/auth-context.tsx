@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { authService } from "@/services/auth.service"
 // import KeycloakService from "@/lib/keycloak"
 
 interface User {
@@ -17,7 +18,7 @@ interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (username: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   register: () => Promise<void>
   hasRole: (role: string) => boolean
@@ -39,9 +40,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // const keycloakService = KeycloakService.getInstance()
 
   useEffect(() => {
-    setIsLoading(false)
-    // initializeAuth()
+    initializeAuth()
   }, [])
+
+  const initializeAuth = async () => {
+    setIsLoading(true)
+    try {
+      // Initialize auth service from storage
+      authService.initializeFromStorage()
+      
+      if (authService.isAuthenticated()) {
+        // Get user data from localStorage
+        const storedUser = authService.getUserFromStorage()
+        if (storedUser) {
+          setIsAuthenticated(true)
+          setUser(storedUser)
+        } else {
+          // If no user data found, logout to clear invalid state
+          await authService.logout()
+          setIsAuthenticated(false)
+          setUser(null)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to initialize auth:', error)
+      // Clear invalid token
+      await authService.logout()
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // const initializeAuth = async () => {
   //   try {
@@ -100,29 +128,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Local user state for demo
   // const [localUser, setLocalUser] = useState<User | null>(null)
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true)
-    if (username === "admin" && password === "admin!") {
-      const adminUser = {
+    try {
+      const authResponse = await authService.login({ email, password })
+      
+      // Use the user data from the auth response
+      const user: User = authResponse.user || {
         id: "1",
-        username: "admin",
-        email: "admin@example.com",
-        fullName: "Admin User",
-        roles: ["admin"],
-        isCoEMember: true,
-        isProjectMember: true,
+        username: email.split('@')[0],
+        email: email,
+        fullName: email.split('@')[0],
+        roles: ["user"],
+        isCoEMember: false,
+        isProjectMember: false,
       }
-      setUser(adminUser)
+      
+      setUser(user)
       setIsAuthenticated(true)
-    } else {
+    } catch (error) {
       setUser(null)
       setIsAuthenticated(false)
-      throw new Error("Invalid credentials")
+      throw error
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   const logout = async () => {
+    await authService.logout()
     setUser(null)
     setIsAuthenticated(false)
   }
@@ -141,7 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const getToken = (): string | undefined => {
-    return undefined
+    return authService.getToken() || undefined
   }
 
   const refreshToken = async (): Promise<boolean> => {

@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/hooks/use-toast"
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -67,12 +69,38 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const { user, logout, hasRole } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
 
   const handleLogout = async () => {
     try {
+      // Show confirmation toast
+      toast({
+        title: "Logging out...",
+        description: "Clearing your session securely.",
+        variant: "default",
+      })
+      
       await logout()
+      
+      // Show success toast
+      toast({
+        title: "Logout Successful!",
+        description: "You have been logged out securely.",
+        variant: "default",
+      })
+      
+      // Navigate to home page after a short delay (will show login page)
+      setTimeout(() => {
+        window.location.href = "/"
+      }, 1000)
     } catch (error) {
       console.error("Logout failed:", error)
+      toast({
+        title: "Logout Failed",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -135,15 +163,11 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">
-                  {user.fullName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()}
+                  {user.username.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm truncate">{user.fullName}</p>
+                <p className="text-white font-semibold text-sm truncate">{user.username}</p>
                 <p className="text-white/60 text-xs truncate">{user.email}</p>
                 <div className="flex items-center space-x-1 mt-1">
                   {user.isCoEMember && (
@@ -230,12 +254,15 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
             onClick={handleLogout}
             variant="ghost"
             className={cn(
-              "w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-2xl transition-all duration-300 hover:scale-[1.02] h-12",
+              "w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-2xl transition-all duration-300 hover:scale-[1.02] h-12 z-50 relative cursor-pointer",
+              "focus:outline-none focus:ring-2 focus:ring-red-400/50 focus:ring-offset-2 focus:ring-offset-transparent",
+              "active:bg-red-500/20 active:scale-95",
               isCollapsed ? "justify-center px-0" : "justify-start",
             )}
+            type="button"
           >
-            <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-            {!isCollapsed && <span className="font-semibold">Secure Logout</span>}
+            <LogOut className={cn("h-5 w-5 z-10", !isCollapsed && "mr-3")} />
+            {!isCollapsed && <span className="font-semibold z-10">Secure Logout</span>}
           </Button>
         </div>
       </GlassCard>
