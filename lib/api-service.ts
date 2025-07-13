@@ -1,7 +1,7 @@
 // Felix Blockchain API Service Layer
 class FelixApiService {
-  private baseURL = "https://api.felix.blockchain.com"
-  private stellarEndpoint = "https://horizon.stellar.org"
+  private baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
+  private stellarEndpoint = process.env.NEXT_PUBLIC_STELLAR_ENDPOINT || 'https://horizon.stellar.org'
   private token: string | null = null
 
   setAuthToken(token: string) {
@@ -74,9 +74,35 @@ class FelixApiService {
     })
   }
 
-  // Service Marketplace APIs
+// Service Marketplace APIs
   async getMarketplaceServices() {
     return this.request("/marketplace/services")
+  }
+
+  async getAllServices(limit: number = 10, offset: number = 0) {
+    const url = `${this.baseURL}/api/services/all?limit=${limit}&offset=${offset}`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Services API error:', errorData)
+        throw new Error(errorData.error || `Failed to fetch services: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error fetching services:', error)
+      throw error
+    }
   }
 
   async purchaseService(serviceId: string, paymentData: any) {
@@ -112,8 +138,8 @@ class FelixApiService {
   
 // User Profile APIs
   async fetchUserProfile(email: string, retryCount = 0, maxRetries = 3) {
-    // Use local dev server endpoint for profile
-    const url = 'http://localhost:4000/api/fetch/profile'
+    // Use API base URL from environment for profile
+    const url = `${this.baseURL}/api/fetch/profile`
     const config: RequestInit = {
       method: 'POST',
       headers: {
