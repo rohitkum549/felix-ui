@@ -112,6 +112,32 @@ class FelixApiService {
     })
   }
 
+  async payForMemo(memoId: string, buyerSecret: string) {
+    const url = `${this.baseURL}/api/memos/pay-for-memo`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ memoId, buyerSecret }),
+    }
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Payment API error:', errorData)
+        throw new Error(errorData.error || `Failed to process payment: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error processing payment:', error)
+      throw error
+    }
+  }
+
   // Asset Management APIs
   async getAssetPortfolio() {
     return this.request("/assets/portfolio")
