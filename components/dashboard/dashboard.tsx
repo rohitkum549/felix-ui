@@ -3,17 +3,9 @@
 import { useEffect, useState } from "react"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
-import {
-  Users,
-  DollarSign,
-  ShoppingCart,
-  ArrowUpRight,
-  ArrowDownRight,
-  MoreVertical,
-  Blocks,
-  Zap,
-  Shield,
-} from "lucide-react"
+import { Users, DollarSign, ShoppingCart, ArrowUpRight, ArrowDownRight, MoreVertical, Blocks, Zap, Shield } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { useProfile } from "@/hooks/use-profile"
 
 interface StatCard {
   title: string
@@ -65,8 +57,61 @@ const felixStats: StatCard[] = [
 ]
 
 export function Dashboard() {
-  const [stats, setStats] = useState<StatCard[]>(felixStats)
-  const [loading, setLoading] = useState(false)
+const { user, isAuthenticated } = useAuth();
+  const { profile, fetchProfile, loading: profileLoading } = useProfile();
+  const [stats, setStats] = useState<StatCard[]>(felixStats);
+  const [loading, setLoading] = useState(false);
+
+useEffect(() => {
+    // Create a flag to track if we've already loaded the profile
+    const profileLoadedKey = 'felix_profile_loaded';
+    const isProfileLoaded = sessionStorage.getItem(profileLoadedKey);
+    
+    const loadUserProfile = async () => {
+      if (isAuthenticated && user?.email && !isProfileLoaded) {
+        try {
+          await fetchProfile(user.email);
+          console.log("Profile data stored in session storage.");
+          // Set flag to prevent additional loads
+          sessionStorage.setItem(profileLoadedKey, 'true');
+        } catch (error) {
+          console.error("Failed to fetch profile data:", error);
+        }
+      }
+    };
+
+    loadUserProfile();
+    
+    // Clear the flag when component unmounts
+    return () => {
+      // We only want to clear this on actual logout, not component unmount
+      // So we'll handle this in the logout function instead
+    };
+  }, [isAuthenticated, user]);
+  
+// Update stats with profile data when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      const updatedStats = [...stats];
+      
+      // Update User information
+      updatedStats[2] = {
+        ...updatedStats[2],
+        value: profile.entity_belongs || updatedStats[2].value,
+        description: `${profile.role} • ${profile.entity_admin_name}`,
+      };
+      
+      // Update wallet information if public key is available
+      if (profile.public_key) {
+        updatedStats[0] = {
+          ...updatedStats[0],
+          description: `Wallet: ${profile.public_key.substring(0, 8)}...`,
+        };
+      }
+      
+      setStats(updatedStats);
+    }
+  }, [profile]);
 
   return (
     <div className="space-y-10">
@@ -76,15 +121,16 @@ export function Dashboard() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-cyan-500/10 rounded-full -translate-y-32 translate-x-32"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-2">
-                  Welcome to Felix Platform
+<div>
+<h2 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-2">
+                  {profile ? `Welcome, ${profile.username}` : 'Welcome to Felix Platform'}
                 </h2>
                 <p className="text-white/70 text-lg">
                   Your blockchain-powered Centre of Excellence & Project management hub
                 </p>
                 <p className="text-white/50 text-sm mt-2">
                   Stellar Network • Version 1.0 • Secure Multi-Signature Environment
+                  {profileLoading && <span className="ml-2 animate-pulse">Loading profile...</span>}
                 </p>
               </div>
               <div className="flex items-center space-x-4">

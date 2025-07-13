@@ -5,7 +5,9 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Star, Heart, ShoppingCart, Eye, Download, TrendingUp } from "lucide-react"
+import { Search, Filter, Star, Heart, ShoppingCart, Eye, Download, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react"
+import { useMarketplace } from "@/hooks/use-marketplace"
+import { Service } from "@/lib/marketplace-service"
 
 interface MarketplaceItem {
   id: string
@@ -19,6 +21,23 @@ interface MarketplaceItem {
   image: string
   featured: boolean
   tags: string[]
+}
+
+// Map API service to UI MarketplaceItem
+const mapServiceToMarketplaceItem = (service: Service): MarketplaceItem => {
+  return {
+    id: service.id,
+    title: service.memo || 'Service',
+    description: service.description || 'Description not provided',
+    price: service.amount || 0,
+    rating: service.rating || 0,
+    reviews: Math.floor(Math.random() * 100) + 50, // Mock data
+    downloads: Math.floor(Math.random() * 5000) + 1000, // Mock data
+    category: service.currency || 'BD',
+    image: '/placeholder.svg?height=200&width=300',
+    featured: Math.random() > 0.5, // Randomly set some as featured
+    tags: [service.status || 'pending', service.currency || 'BD']
+  }
 }
 
 const mockItems: MarketplaceItem[] = [
@@ -64,29 +83,37 @@ const mockItems: MarketplaceItem[] = [
 ]
 
 export function Marketplace() {
-  const [items, setItems] = useState<MarketplaceItem[]>(mockItems)
+  // Use our marketplace hook for fetching services
+  const { 
+    services, 
+    loading, 
+    error, 
+    pagination, 
+    loadServices,
+    loadNextPage, 
+    loadPreviousPage,
+    setItemsPerPage
+  } = useMarketplace(6);
+  
+  const [items, setItems] = useState<MarketplaceItem[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
-  const [loading, setLoading] = useState(false)
-
-  const categories = ["All", "Templates", "Components", "Analytics", "Tools"]
-
+  
+  // Derived categories from actual data
+  const [categories, setCategories] = useState<string[]>(["All"])
+  
+  // Map API services to UI items whenever services change
   useEffect(() => {
-    loadMarketplaceItems()
-  }, [])
-
-  const loadMarketplaceItems = async () => {
-    setLoading(true)
-    try {
-      // const data = await apiService.getMarketplaceItems()
-      // setItems(data)
-    } catch (error) {
-      console.error("Failed to load marketplace items:", error)
-    } finally {
-      setLoading(false)
+    if (services && services.length > 0) {
+      const mappedItems = services.map(mapServiceToMarketplaceItem);
+      setItems(mappedItems);
+      
+      // Extract unique categories from services
+      const uniqueCurrencies = [...new Set(services.map(s => s.currency))];
+      setCategories(["All", ...uniqueCurrencies]);
     }
-  }
-
+  }, [services]);
+  
   const filteredItems = items.filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -220,49 +247,118 @@ export function Marketplace() {
 
       {/* All Products */}
       <div>
-        <h2 className="text-2xl font-bold text-white mb-6">All Products</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredItems.map((item) => (
-            <GlassCard key={item.id} variant="premium" className="group overflow-hidden">
-              <div className="relative">
-                <img
-                  src={item.image || "/placeholder.svg"}
-                  alt={item.title}
-                  className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-3 right-3 flex space-x-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8"
-                  >
-                    <Heart className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-4">
-                <h3 className="text-white font-semibold mb-2 line-clamp-1">{item.title}</h3>
-                <p className="text-white/60 text-sm mb-3 line-clamp-2">{item.description}</p>
-
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                    <span className="text-white text-sm">{item.rating}</span>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">All Products</h2>
+          
+          {/* Pagination Controls */}
+          <div className="flex items-center space-x-2">
+            <div className="text-white/60 text-sm">
+              {pagination.currentPage * pagination.itemsPerPage + 1}-
+              {Math.min((pagination.currentPage + 1) * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems}
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={loadPreviousPage} 
+                disabled={!pagination.hasPreviousPage || loading}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={loadNextPage} 
+                disabled={!pagination.hasNextPage || loading}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        {loading && (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <div className="text-white">Loading services...</div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <div className="text-red-400">Error loading services: {error.message}</div>
+          </div>
+        )}
+        
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => (
+                <GlassCard key={item.id} variant="premium" className="group overflow-hidden">
+                  <div className="relative">
+                    <img
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.title}
+                      className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 right-3 flex space-x-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8"
+                      >
+                        <Heart className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-white font-bold">${item.price}</p>
-                </div>
 
-                <Button
-                  size="sm"
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg"
-                >
-                  <ShoppingCart className="h-3 w-3 mr-2" />
-                  Buy Now
-                </Button>
+                  <div className="p-4">
+                    <h3 className="text-white font-semibold mb-2 line-clamp-1">{item.title}</h3>
+                    <p className="text-white/60 text-sm mb-3 line-clamp-2">{item.description}</p>
+
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        <span className="text-white text-sm">{item.rating}</span>
+                      </div>
+                      <p className="text-white font-bold">B$ {item.price}</p>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg"
+                    >
+                      <ShoppingCart className="h-3 w-3 mr-2" />
+                      Buy Now
+                    </Button>
+                  </div>
+                </GlassCard>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-10 text-white/60">
+                No services found matching your criteria.
               </div>
-            </GlassCard>
-          ))}
+            )}
+          </div>
+        )}
+        
+        {/* Items per page selector */}
+        <div className="flex justify-end mt-6">
+          <div className="flex items-center space-x-2">
+            <span className="text-white/60 text-sm">Items per page:</span>
+<select 
+              className="bg-white/10 border border-white/20 text-white rounded-lg p-1 [&>option]:text-black dark:[&>option]:text-white [&>option]:bg-white dark:[&>option]:bg-gray-800"
+              value={pagination.itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              disabled={loading}
+            >
+              <option value="6">6</option>
+              <option value="12">12</option>
+              <option value="24">24</option>
+              <option value="48">48</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>

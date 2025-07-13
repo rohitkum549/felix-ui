@@ -103,13 +103,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     setIsLoading(true)
     try {
-      await keycloakService.logout()
+await keycloakService.logout()
       setUser(null)
       setIsAuthenticated(false)
       // Clear all tokens and storage
       localStorage.removeItem("felix_access_token")
       localStorage.removeItem("felix_refresh_token")
       localStorage.removeItem("felix_user_info")
+      
+      // Clear session storage items
+      sessionStorage.removeItem("felix_profile_data")
+      sessionStorage.removeItem("felix_profile_loaded")
     } finally {
       setIsLoading(false)
     }
