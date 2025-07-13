@@ -68,22 +68,6 @@ export function Dashboard() {
   const [stats, setStats] = useState<StatCard[]>(felixStats)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  const loadDashboardData = async () => {
-    setLoading(true)
-    try {
-      // const data = await felixApi.getDashboardStats()
-      // setStats(data)
-    } catch (error) {
-      console.error("Failed to load Felix dashboard data:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <div className="space-y-10">
       {/* Welcome Section */}
