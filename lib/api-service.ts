@@ -98,7 +98,7 @@ class FelixApiService {
     })
   }
 
-  // Settings APIs
+// Settings APIs
   async getBlockchainSettings() {
     return this.request("/settings/blockchain")
   }
@@ -108,6 +108,54 @@ class FelixApiService {
       method: "PUT",
       body: JSON.stringify(settings),
     })
+  }
+  
+// User Profile APIs
+  async fetchUserProfile(email: string, retryCount = 0, maxRetries = 3) {
+    // Use local dev server endpoint for profile
+    const url = 'http://localhost:4000/api/fetch/profile'
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ email }),
+    }
+    
+    try {
+      const response = await fetch(url, config)
+      
+      // Check if the request was successful
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Profile API error:', errorData)
+        throw new Error(errorData.error || `Failed to fetch profile: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      
+      // Validate response format
+      if (!data || !data.user) {
+        throw new Error('Invalid profile response format')
+      }
+      
+      return data
+    } catch (error) {
+      // Implement retry logic with exponential backoff
+      if (retryCount < maxRetries) {
+        const delay = Math.pow(2, retryCount) * 1000 // Exponential backoff: 1s, 2s, 4s
+        console.log(`Retrying profile fetch (${retryCount + 1}/${maxRetries}) after ${delay}ms`)
+        
+        return new Promise(resolve => {
+          setTimeout(() => {
+            resolve(this.fetchUserProfile(email, retryCount + 1, maxRetries))
+          }, delay)
+        })
+      }
+      
+      throw error
+    }
   }
 }
 
