@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { User, Bell, Shield, Palette, Globe, Key, Smartphone, Mail, Save } from "lucide-react"
 
+interface UserInfo {
+  sub?: string
+  email?: string
+  preferred_username?: string
+  given_name?: string
+  family_name?: string
+  name?: string
+  phone_number?: string
+  realm_access?: {
+    roles?: string[]
+  }
+}
+
 export function Settings() {
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    timezone: "utc-5",
+    language: "en"
+  })
+
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -23,6 +46,97 @@ export function Settings() {
     biometric: false,
     sessionTimeout: "30",
   })
+
+  // Load user info from localStorage on component mount
+  useEffect(() => {
+    const loadUserInfo = () => {
+      try {
+        const storedUserInfo = localStorage.getItem("felix_user_info")
+        if (storedUserInfo) {
+          const parsedUserInfo: UserInfo = JSON.parse(storedUserInfo)
+          setUserInfo(parsedUserInfo)
+          
+          // Update form data with user info
+          setFormData({
+            firstName: parsedUserInfo.given_name || "",
+            lastName: parsedUserInfo.family_name || "",
+            email: parsedUserInfo.email || "",
+            phone: parsedUserInfo.phone_number || "",
+            timezone: "utc-5", // Default, can be expanded to store user preference
+            language: "en" // Default, can be expanded to store user preference
+          })
+        }
+      } catch (error) {
+        console.error("Error loading user info from localStorage:", error)
+      }
+    }
+
+    loadUserInfo()
+  }, [])
+
+  // Generate user initials for avatar
+  const getUserInitials = () => {
+    if (userInfo?.given_name && userInfo?.family_name) {
+      return `${userInfo.given_name[0]}${userInfo.family_name[0]}`.toUpperCase()
+    }
+    if (userInfo?.name) {
+      const nameParts = userInfo.name.split(" ")
+      return nameParts.map(part => part[0]).join("").toUpperCase()
+    }
+    if (userInfo?.preferred_username) {
+      return userInfo.preferred_username.slice(0, 2).toUpperCase()
+    }
+    return "U"
+  }
+
+  // Get full name
+  const getFullName = () => {
+    if (userInfo?.given_name && userInfo?.family_name) {
+      return `${userInfo.given_name} ${userInfo.family_name}`
+    }
+    if (userInfo?.name) {
+      return userInfo.name
+    }
+    return userInfo?.preferred_username || "User"
+  }
+
+  // Get membership status
+  const getMembershipStatus = () => {
+    const roles = userInfo?.realm_access?.roles || []
+    if (roles.includes("coe-admin") || roles.includes("project-admin")) {
+      return "Premium Member since 2024"
+    }
+    return "Member since 2024"
+  }
+
+  // Handle form input changes
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Save changes function
+  const handleSaveChanges = () => {
+    // Here you would typically make an API call to update the user's profile
+    // For now, we'll just update the localStorage
+    try {
+      if (userInfo) {
+        const updatedUserInfo = {
+          ...userInfo,
+          given_name: formData.firstName,
+          family_name: formData.lastName,
+          email: formData.email,
+          phone_number: formData.phone
+        }
+        localStorage.setItem("felix_user_info", JSON.stringify(updatedUserInfo))
+        setUserInfo(updatedUserInfo)
+        
+        // Show success message (you can implement a toast notification here)
+        console.log("Profile updated successfully!")
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -68,11 +182,11 @@ export function Settings() {
           <GlassCard variant="ultra" className="p-8">
             <div className="flex items-center space-x-6 mb-8">
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-2xl font-bold">JD</span>
+                <span className="text-white text-2xl font-bold">{getUserInitials()}</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">John Doe</h2>
-                <p className="text-white/60">Premium Member since 2024</p>
+                <h2 className="text-2xl font-bold text-white mb-2">{getFullName()}</h2>
+                <p className="text-white/60">{getMembershipStatus()}</p>
                 <Button
                   variant="outline"
                   className="mt-3 border-white/20 text-white hover:bg-white/10 rounded-lg bg-transparent"
@@ -89,8 +203,10 @@ export function Settings() {
                 </Label>
                 <Input
                   id="firstName"
-                  defaultValue="John"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:bg-white/15 focus:border-white/30"
+                  placeholder="Enter your first name"
                 />
               </div>
               <div className="space-y-2">
@@ -99,8 +215,10 @@ export function Settings() {
                 </Label>
                 <Input
                   id="lastName"
-                  defaultValue="Doe"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:bg-white/15 focus:border-white/30"
+                  placeholder="Enter your last name"
                 />
               </div>
               <div className="space-y-2">
@@ -110,8 +228,10 @@ export function Settings() {
                 <Input
                   id="email"
                   type="email"
-                  defaultValue="john@example.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:bg-white/15 focus:border-white/30"
+                  placeholder="Enter your email"
                 />
               </div>
               <div className="space-y-2">
@@ -120,15 +240,17 @@ export function Settings() {
                 </Label>
                 <Input
                   id="phone"
-                  defaultValue="+1 234 567 8900"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:bg-white/15 focus:border-white/30"
+                  placeholder="Enter your phone number"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="timezone" className="text-white/80">
                   Timezone
                 </Label>
-                <Select defaultValue="utc-5">
+                <Select value={formData.timezone} onValueChange={(value) => handleInputChange('timezone', value)}>
                   <SelectTrigger className="bg-white/10 border-white/20 text-white rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
@@ -152,7 +274,7 @@ export function Settings() {
                 <Label htmlFor="language" className="text-white/80">
                   Language
                 </Label>
-                <Select defaultValue="en">
+                <Select value={formData.language} onValueChange={(value) => handleInputChange('language', value)}>
                   <SelectTrigger className="bg-white/10 border-white/20 text-white rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
@@ -172,7 +294,10 @@ export function Settings() {
             </div>
 
             <div className="flex justify-end mt-8">
-              <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl">
+              <Button 
+                onClick={handleSaveChanges}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl"
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
               </Button>
