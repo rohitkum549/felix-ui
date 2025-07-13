@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { AuthProvider } from "@/contexts/auth-context"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 import { LeftNavbar } from "@/components/layout/left-navbar"
 import { UpperNavbar } from "@/components/layout/upper-navbar"
 import { Dashboard } from "@/components/dashboard/dashboard"
@@ -86,7 +87,9 @@ function FelixAppContent() {
 export default function FelixApp() {
   return (
     <AuthProvider>
-      <FelixAppContent />
+      <ProtectedRoute>
+        <FelixAppContent />
+      </ProtectedRoute>
     </AuthProvider>
   )
 }

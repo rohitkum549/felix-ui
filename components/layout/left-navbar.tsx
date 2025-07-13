@@ -6,6 +6,17 @@ import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { useAuth } from "@/contexts/auth-context"
 import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import {
   LayoutDashboard,
   ShoppingBag,
   Users,
@@ -68,11 +79,28 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const { user, logout, hasRole } = useAuth()
 
-  const handleLogout = async () => {
+  const handleLogout = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log("🔥 Logout button clicked!")
+    
     try {
-      await logout()
+      // Clear any local storage tokens first
+      localStorage.removeItem("felix_access_token")
+      localStorage.removeItem("felix_refresh_token")
+      localStorage.removeItem("felix_user_info")
+      
+      // Direct window location redirect to Keycloak logout
+      const keycloakLogoutUrl = "https://iam-uat.cateina.com/realms/Cateina_Felix_Op/protocol/openid-connect/logout"
+      const redirectUri = encodeURIComponent("http://localhost:3000")
+      
+      console.log("🔥 Redirecting to:", `${keycloakLogoutUrl}?redirect_uri=${redirectUri}`)
+      
+      // Redirect directly to Keycloak logout page
+      window.location.href = `${keycloakLogoutUrl}?redirect_uri=${redirectUri}`
     } catch (error) {
       console.error("Logout failed:", error)
+      alert("Logout failed. Please try again.")
     }
   }
 
@@ -95,6 +123,7 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
         variant="blockchain"
         className="h-full rounded-none rounded-r-3xl border-l-0 p-6 flex flex-col"
         glow={true}
+        hover={false}
       >
         {/* Logo Section */}
         <div className="flex items-center justify-between mb-10">
@@ -227,15 +256,16 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
         {/* Logout Button */}
         <div className="mt-auto pt-6 border-t border-white/10">
           <Button
-            onClick={handleLogout}
             variant="ghost"
+            onClick={handleLogout}
             className={cn(
-              "w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-2xl transition-all duration-300 hover:scale-[1.02] h-12",
-              isCollapsed ? "justify-center px-0" : "justify-start",
+              "w-full bg-red-600/20 text-red-400 hover:text-white hover:bg-red-600 rounded-2xl transition-all duration-300 hover:scale-[1.02] h-12 cursor-pointer z-10 relative",
+              isCollapsed ? "justify-center px-0" : "justify-start px-4",
             )}
+            onMouseEnter={() => console.log("🔥 Logout button hovered")}
           >
             <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-            {!isCollapsed && <span className="font-semibold">Secure Logout</span>}
+            {!isCollapsed && <span className="font-semibold">Logout</span>}
           </Button>
         </div>
       </GlassCard>

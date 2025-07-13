@@ -16,19 +16,22 @@ const getKeycloakInstance = () => {
 }
 
 const initOptions = {
-  onLoad: "login-required" as const,
+  onLoad: "check-sso" as const,
   silentCheckSsoRedirectUri: typeof window !== "undefined" ? `${window.location.origin}/silent-check-sso.html` : "",
-  checkLoginIframe: true,
+  checkLoginIframe: false, // Disable iframe check to prevent auto-refresh
   pkceMethod: "S256" as const,
-  enableLogging: true,
+  enableLogging: true, // Enable logging for debugging
   messageReceiveTimeout: 10000,
-  responseMode: "fragment" as const,
+  responseMode: "query" as const,
+  checkLoginIframeInterval: 0, // Disable iframe interval check
 }
 
 class KeycloakService {
   private static instance: KeycloakService
   private keycloakInstance: Keycloak
   private initialized = false
+  private tokenRefreshInterval: NodeJS.Timeout | null = null
+  private initPromise: Promise<boolean> | null = null
 
   private constructor() {
     this.keycloakInstance = getKeycloakInstance()
@@ -42,17 +45,73 @@ class KeycloakService {
   }
 
   public async init(): Promise<boolean> {
-    try {
-      const authenticated = await this.keycloakInstance.init(initOptions)
-      this.initialized = true
-      if (authenticated && this.keycloakInstance.token) {
-        this.storeTokens()
-        this.setupTokenRefresh()
+    // Prevent multiple simultaneous init calls
+    if (this.initPromise) {
+      console.log("🔄 Keycloak init already in progress, waiting...")
+      return this.initPromise
+    }
+
+    if (this.initialized) {
+      console.log("✅ Keycloak already initialized")
+      return this.isAuthenticated()
+    }
+
+    this.initPromise = this.performInit()
+    return this.initPromise
+  }
+
+  private async performInit(): Promise<boolean> {
+    let retryCount = 0
+    const maxRetries = 3
+    const retryDelay = 1000
+
+    while (retryCount < maxRetries) {
+      try {
+        console.log(`🔑 Keycloak init attempt ${retryCount + 1}/${maxRetries}...`)
+        
+        // Clear any existing auth state
+        this.clearAuthState()
+        
+        const authenticated = await this.keycloakInstance.init(initOptions)
+        this.initialized = true
+        
+        if (authenticated && this.keycloakInstance.token) {
+          console.log("✅ Keycloak authentication successful")
+          this.storeTokens()
+          this.setupTokenRefresh()
+          return true
+        } else {
+          console.log("ℹ️ Keycloak initialized but user not authenticated")
+          return false
+        }
+      } catch (error) {
+        retryCount++
+        console.error(`❌ Keycloak init attempt ${retryCount} failed:`, error)
+        
+        if (retryCount < maxRetries) {
+          console.log(`⏳ Retrying in ${retryDelay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, retryDelay))
+        } else {
+          console.error("❌ All Keycloak init attempts failed")
+          throw error
+        }
       }
-      console.log("Keycloak initialized successfully:", authenticated ? "Authenticated" : "Not authenticated");
-      return authenticated
-    } catch (error) {
-      throw error
+    }
+    
+    return false
+  }
+
+  private clearAuthState(): void {
+    // Clear any existing Keycloak state
+    if (this.keycloakInstance.authenticated) {
+      this.keycloakInstance.authenticated = false
+    }
+    
+    // Clear stored tokens if they exist
+    const storedToken = localStorage.getItem("felix_access_token")
+    if (storedToken) {
+      console.log("🧹 Clearing stale tokens")
+      this.clearTokens()
     }
   }
 
@@ -65,15 +124,23 @@ class KeycloakService {
   }
 
   private setupTokenRefresh(): void {
-    setInterval(() => {
+    // Clear any existing interval
+    if (this.tokenRefreshInterval) {
+      clearInterval(this.tokenRefreshInterval)
+    }
+    
+    // Set up token refresh every 4 minutes (240000ms)
+    this.tokenRefreshInterval = setInterval(() => {
       this.keycloakInstance
         .updateToken(60)
         .then((refreshed) => {
           if (refreshed) {
             this.storeTokens()
+            console.log('Token refreshed successfully')
           }
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Token refresh failed:', error)
           this.clearTokens()
         })
     }, 240000)
@@ -87,9 +154,21 @@ class KeycloakService {
   }
 
   public async logout(): Promise<void> {
+    // Clear the token refresh interval
+    if (this.tokenRefreshInterval) {
+      clearInterval(this.tokenRefreshInterval)
+      this.tokenRefreshInterval = null
+    }
+    
+    // Clear all stored tokens and user data
     this.clearTokens()
+    
+    // Clear any additional application data
+    this.clearAllApplicationData()
+    
+    // Logout from Keycloak with redirect to port 3000
     await this.keycloakInstance.logout({
-      redirectUri: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
+      redirectUri: "http://localhost:3000",
     })
   }
 
@@ -103,6 +182,24 @@ class KeycloakService {
     localStorage.removeItem("felix_access_token")
     localStorage.removeItem("felix_refresh_token")
     localStorage.removeItem("felix_user_info")
+  }
+  
+  private clearAllApplicationData(): void {
+    // Clear all Felix-related data from localStorage
+    const keys = Object.keys(localStorage)
+    keys.forEach(key => {
+      if (key.startsWith('felix_')) {
+        localStorage.removeItem(key)
+      }
+    })
+    
+    // Clear session storage as well
+    const sessionKeys = Object.keys(sessionStorage)
+    sessionKeys.forEach(key => {
+      if (key.startsWith('felix_')) {
+        sessionStorage.removeItem(key)
+      }
+    })
   }
 
   public isAuthenticated(): boolean {
