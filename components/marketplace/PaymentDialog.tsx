@@ -33,7 +33,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border border-gray-800 text-white">
+      <DialogContent className="bg-gray-900 border border-gray-800 text-white max-w-md rounded-lg overflow-hidden">
         <DialogHeader>
           {status === 'idle' && (
             <>
@@ -103,9 +103,12 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
                 <p className="font-bold">B$ {productPrice}</p>
               </div>
               {transactionHash && (
-                <p className="text-sm text-green-400 mt-2">
-                  Transaction ID: {transactionHash}
-                </p>
+                <div className="mt-2">
+                  <p className="text-xs text-gray-400">Transaction ID:</p>
+                  <p className="text-xs text-green-400 break-all font-mono">
+                    {transactionHash}
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -149,8 +152,8 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
             <Button 
               onClick={onClose}
               className={status === 'success' 
-                ? "bg-gradient-to-r from-green-500 to-green-600" 
-                : "bg-gradient-to-r from-gray-500 to-gray-600"}
+                ? "bg-gradient-to-r from-green-500 to-green-600 rounded-md w-24 py-2" 
+                : "bg-gradient-to-r from-gray-500 to-gray-600 rounded-md w-24 py-2"}
             >
               {status === 'success' ? 'Done' : 'Close'}
             </Button>
