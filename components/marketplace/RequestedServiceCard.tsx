@@ -10,6 +10,7 @@ import { Calendar, DollarSign, FileText, Settings, User, Eye, Send, Loader2, X }
 import { felixApi } from "@/lib/api-service"
 import { SubmitProposalDialog } from "./SubmitProposalDialog"
 import { useToast } from "@/components/ui/use-toast"
+import { profileService } from "@/lib/profile-service"
 
 export interface RequestedService {
   id: string
@@ -28,7 +29,7 @@ export interface Proposal {
   provider_key: string
   proposal_text: string
   bid_amount: number
-  status: "pending" | "accepted" | "rejected"
+  status: "pending" | "accepted" | "rejected" | "paid"
   created_at: string
 }
 
@@ -139,6 +140,77 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
     }
   }
 
+  const handlePayProposal = async (proposalId: string) => {
+    setProcessingProposal(proposalId)
+    
+    try {
+      // Get the client secret from the profile service
+      const profile = profileService.getCurrentProfile()
+      
+      if (!profile || !profile.secret_key) {
+        throw new Error('Client secret not available. Please log in again.')
+      }
+      
+      // Call the payment API
+      await felixApi.payProposal(proposalId, profile.secret_key)
+      
+      // Update the proposal status locally
+      setProposals(prevProposals => 
+        prevProposals.map(proposal => 
+          proposal.id === proposalId 
+            ? { ...proposal, status: 'paid' as const }
+            : proposal
+        )
+      )
+      
+      toast({
+        title: "Success",
+        description: "Payment processed successfully",
+        variant: "default"
+      })
+    } catch (err) {
+      console.error('Error processing payment:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process payment'
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setProcessingProposal(null)
+    }
+  }
+
+  const handleDeleteProposal = async (proposalId: string) => {
+    setProcessingProposal(proposalId)
+    
+    try {
+      // Call the delete API
+      await felixApi.deleteProposal(proposalId)
+      
+      // Remove the proposal from the list
+      setProposals(prevProposals => 
+        prevProposals.filter(proposal => proposal.id !== proposalId)
+      )
+      
+      toast({
+        title: "Success",
+        description: "Proposal deleted successfully",
+        variant: "default"
+      })
+    } catch (err) {
+      console.error('Error deleting proposal:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete proposal'
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setProcessingProposal(null)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'paid':
@@ -164,6 +236,8 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
         return 'bg-green-500/20 text-green-400 border-green-500/30'
       case 'rejected':
         return 'bg-red-500/20 text-red-400 border-red-500/30'
+      case 'paid':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
       default:
         return 'bg-gray-500/20 text-gray-400 border-gray-500/30'
     }
@@ -330,38 +404,81 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-2 justify-center">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="text-green-400 border-green-400 hover:bg-green-400/10 px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    onClick={() => handleAcceptProposal(proposal.id)}
-                                    disabled={proposal.status !== 'pending' || processingProposal === proposal.id}
-                                  >
-                                    {processingProposal === proposal.id ? (
-                                      <>
-                                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                        Accept
-                                      </>
-                                    ) : (
-                                      'Accept'
-                                    )}
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="text-red-400 border-red-400 hover:bg-red-400/10 px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    onClick={() => handleRejectProposal(proposal.id)}
-                                    disabled={proposal.status !== 'pending' || processingProposal === proposal.id}
-                                  >
-                                    {processingProposal === proposal.id ? (
-                                      <>
-                                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                        Reject
-                                      </>
-                                    ) : (
-                                      'Reject'
-                                    )}
-                                  </Button>
+                                  {proposal.status === 'pending' && (
+                                    <>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline" 
+                                        className="text-green-400 border-green-400 hover:bg-green-400/10 px-3 py-1"
+                                        onClick={() => handleAcceptProposal(proposal.id)}
+                                        disabled={processingProposal === proposal.id}
+                                      >
+                                        {processingProposal === proposal.id ? (
+                                          <>
+                                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                            Accept
+                                          </>
+                                        ) : (
+                                          'Accept'
+                                        )}
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline" 
+                                        className="text-red-400 border-red-400 hover:bg-red-400/10 px-3 py-1"
+                                        onClick={() => handleRejectProposal(proposal.id)}
+                                        disabled={processingProposal === proposal.id}
+                                      >
+                                        {processingProposal === proposal.id ? (
+                                          <>
+                                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                            Reject
+                                          </>
+                                        ) : (
+                                          'Reject'
+                                        )}
+                                      </Button>
+                                    </>
+                                  )}
+                                  {proposal.status === 'accepted' && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="text-blue-400 border-blue-400 hover:bg-blue-400/10 px-3 py-1"
+                                      onClick={() => handlePayProposal(proposal.id)}
+                                      disabled={processingProposal === proposal.id}
+                                    >
+                                      {processingProposal === proposal.id ? (
+                                        <>
+                                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                          Pay
+                                        </>
+                                      ) : (
+                                        'Pay'
+                                      )}
+                                    </Button>
+                                  )}
+                                  {proposal.status === 'paid' && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="text-red-400 border-red-400 hover:bg-red-400/10 px-3 py-1"
+                                      onClick={() => handleDeleteProposal(proposal.id)}
+                                      disabled={processingProposal === proposal.id}
+                                    >
+                                      {processingProposal === proposal.id ? (
+                                        <>
+                                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                          Delete
+                                        </>
+                                      ) : (
+                                        'Delete'
+                                      )}
+                                    </Button>
+                                  )}
+                                  {proposal.status === 'rejected' && (
+                                    <span className="text-gray-400 text-sm">-</span>
+                                  )}
                                 </div>
                               </TableCell>
                             </TableRow>

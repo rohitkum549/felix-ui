@@ -252,6 +252,76 @@ class FelixApiService {
     }
   }
 
+  async payProposal(proposalId: string, clientSecret: string) {
+    const url = `${this.baseURL}/api/services/pay`
+    const bdIssuer = process.env.NEXT_PUBLIC_BDISSUER || process.env.NEXT_BDISSUER
+    
+    if (!bdIssuer) {
+      throw new Error('BD Issuer not configured in environment variables')
+    }
+    
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ 
+        proposalId, 
+        clientSecret, 
+        bdIssuer 
+      }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId, clientSecret: '[REDACTED]', bdIssuer }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Pay proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to pay proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error paying proposal:', error)
+      throw error
+    }
+  }
+
+  async deleteProposal(proposalId: string) {
+    const url = `${this.baseURL}/api/services/delete-proposal`
+    const config: RequestInit = {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ proposalId }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Delete proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to delete proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error deleting proposal:', error)
+      throw error
+    }
+  }
+
   async purchaseService(serviceId: string, paymentData: any) {
     return this.request(`/marketplace/purchase/${serviceId}`, {
       method: "POST",
