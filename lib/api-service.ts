@@ -131,6 +131,67 @@ class FelixApiService {
     }
   }
 
+  async getProposals(requestId: string) {
+    const url = `${this.baseURL}/api/services/get/propose?request_id=${requestId}`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Proposals API error:', errorData)
+        throw new Error(errorData.error || `Failed to fetch proposals: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error fetching proposals:', error)
+      throw error
+    }
+  }
+
+  async submitProposal(proposalData: {
+    requestId: string
+    providerKey: string
+    proposalText: string
+    bidAmount: number
+  }) {
+    const url = `${this.baseURL}/api/services/propose`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify(proposalData),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify(proposalData, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Submit proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to submit proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error submitting proposal:', error)
+      throw error
+    }
+  }
+
   async purchaseService(serviceId: string, paymentData: any) {
     return this.request(`/marketplace/purchase/${serviceId}`, {
       method: "POST",

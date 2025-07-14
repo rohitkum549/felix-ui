@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calendar, DollarSign, FileText, Settings, User, Eye, Send } from "lucide-react"
+import { Calendar, DollarSign, FileText, Settings, User, Eye, Send, Loader2 } from "lucide-react"
+import { felixApi } from "@/lib/api-service"
+import { SubmitProposalDialog } from "./SubmitProposalDialog"
 
 export interface RequestedService {
   id: string
@@ -21,10 +23,10 @@ export interface RequestedService {
 
 export interface Proposal {
   id: string
-  service_provider: string
+  request_id: string
+  provider_key: string
   proposal_text: string
-  proposed_price: number
-  estimated_time: string
+  bid_amount: number
   status: "pending" | "accepted" | "rejected"
   created_at: string
 }
@@ -36,42 +38,39 @@ interface RequestedServiceCardProps {
 
 export function RequestedServiceCard({ service, userPublicKey }: RequestedServiceCardProps) {
   const [isProposalDialogOpen, setIsProposalDialogOpen] = useState(false)
+  const [isSubmitProposalDialogOpen, setIsSubmitProposalDialogOpen] = useState(false)
+  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   
-  const handleViewProposals = () => {
+  const handleViewProposals = async () => {
     console.log('View Proposals button clicked!')
     setIsProposalDialogOpen(true)
+    await fetchProposals()
   }
   
-  // Mock proposal data - in real app, this would come from API
-  const mockProposals: Proposal[] = [
-    {
-      id: "1",
-      service_provider: "ABC123DEF456",
-      proposal_text: "I can complete this QA task with comprehensive testing including unit tests, integration tests, and manual testing. I have 5+ years of experience in QA automation.",
-      proposed_price: 18,
-      estimated_time: "3-4 days",
-      status: "pending",
-      created_at: "2025-07-13T10:30:00Z"
-    },
-    {
-      id: "2",
-      service_provider: "XYZ789GHI012",
-      proposal_text: "Professional QA services with detailed test cases and bug reporting. I specialize in web application testing and can provide thorough documentation.",
-      proposed_price: 22,
-      estimated_time: "2-3 days",
-      status: "pending",
-      created_at: "2025-07-13T14:15:00Z"
-    },
-    {
-      id: "3",
-      service_provider: "PQR456STU789",
-      proposal_text: "Experienced QA engineer offering complete testing solution including automated test scripts and detailed reporting.",
-      proposed_price: 15,
-      estimated_time: "4-5 days",
-      status: "pending",
-      created_at: "2025-07-13T16:45:00Z"
+  const handleApplyForService = () => {
+    console.log('Apply for service', service.id)
+    setIsSubmitProposalDialogOpen(true)
+  }
+  
+  const fetchProposals = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await felixApi.getProposals(service.id)
+      // Handle both single proposal and array of proposals
+      const proposalData = Array.isArray(response) ? response : [response]
+      setProposals(proposalData)
+    } catch (err) {
+      console.error('Error fetching proposals:', err)
+      setError('Failed to load proposals')
+      setProposals([])
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -196,46 +195,53 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
                 View Proposals
               </Button>
               <Dialog open={isProposalDialogOpen} onOpenChange={setIsProposalDialogOpen}>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gray-900 border-gray-700">
+              <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto bg-gray-900 border-gray-700">
                 <DialogHeader>
                   <DialogTitle className="text-white text-xl font-bold">
                     Proposals for "{service.title}"
                   </DialogTitle>
                 </DialogHeader>
                 <div className="mt-4">
-                  {mockProposals.length > 0 ? (
+                  {error ? (
+                    <div className="text-center py-8 text-red-500">
+                      <p>{error}</p>
+                    </div>
+                  ) : loading ? (
+                    <div className="flex items-center justify-center py-8 text-white/60">
+                      <Loader2 className="animate-spin h-8 w-8 mr-2" />
+                      <span>Loading proposals...</span>
+                    </div>
+                  ) : proposals.length > 0 ? (
                     <div className="space-y-4">
-                      <div className="text-white/80 text-sm mb-4">
-                        {mockProposals.length} proposal{mockProposals.length !== 1 ? 's' : ''} received
+                      <div className="flex items-center justify-between text-white/80 text-sm mb-4">
+                        {proposals.length} proposal{proposals.length !== 1 ? 's' : ''} received
                       </div>
                       <Table>
                         <TableHeader>
                           <TableRow className="border-gray-700">
-                            <TableHead className="text-white/80">Service Provider</TableHead>
-                            <TableHead className="text-white/80">Proposal</TableHead>
-                            <TableHead className="text-white/80">Price</TableHead>
-                            <TableHead className="text-white/80">Time</TableHead>
+                            <TableHead className="text-white/80">Provider Key</TableHead>
+                            <TableHead className="text-white/80">Proposal Text</TableHead>
+                            <TableHead className="text-white/80">Bid Amount</TableHead>
                             <TableHead className="text-white/80">Status</TableHead>
                             <TableHead className="text-white/80">Date</TableHead>
                             <TableHead className="text-white/80">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {mockProposals.map((proposal) => (
+                          {proposals.map((proposal) => (
                             <TableRow key={proposal.id} className="border-gray-700 hover:bg-gray-800/50">
                               <TableCell className="text-white/90 font-mono text-sm">
-                                {proposal.service_provider.slice(0, 6)}...{proposal.service_provider.slice(-4)}
+                                {proposal.provider_key.slice(0, 6)}...{proposal.provider_key.slice(-4)}
                               </TableCell>
-                              <TableCell className="text-white/80 max-w-md">
-                                <div className="truncate" title={proposal.proposal_text}>
-                                  {proposal.proposal_text.slice(0, 100)}...
+                              <TableCell className="text-white/80 max-w-xs">
+                                <div className="max-w-xs overflow-hidden">
+                                  <div className="truncate" title={proposal.proposal_text}>
+                                    {proposal.proposal_text}
+                                  </div>
                                 </div>
                               </TableCell>
                               <TableCell className="text-green-400 font-semibold">
-                                ${proposal.proposed_price}
-                              </TableCell>
-                              <TableCell className="text-white/80">
-                                {proposal.estimated_time}
+                                ${proposal.bid_amount}
                               </TableCell>
                               <TableCell>
                                 <Badge className={`${getProposalStatusColor(proposal.status)} border font-medium`} variant="outline">
@@ -246,11 +252,11 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
                                 {formatDate(proposal.created_at)}
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 justify-center">
                                   <Button 
                                     size="sm" 
                                     variant="outline" 
-                                    className="text-green-400 border-green-400 hover:bg-green-400/10"
+                                    className="text-green-400 border-green-400 hover:bg-green-400/10 px-3 py-1"
                                     onClick={() => console.log('Accept proposal', proposal.id)}
                                   >
                                     Accept
@@ -258,7 +264,7 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
                                   <Button 
                                     size="sm" 
                                     variant="outline" 
-                                    className="text-red-400 border-red-400 hover:bg-red-400/10"
+                                    className="text-red-400 border-red-400 hover:bg-red-400/10 px-3 py-1"
                                     onClick={() => console.log('Reject proposal', proposal.id)}
                                   >
                                     Reject
@@ -285,7 +291,7 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl pointer-events-auto cursor-pointer"
               size="sm"
               type="button"
-              onClick={() => console.log('Apply for service', service.id)}
+              onClick={handleApplyForService}
             >
               <Send className="h-4 w-4 mr-2" />
               Apply for Service
@@ -302,6 +308,18 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
           </Button>
         </div>
       </div>
+      
+      {/* Submit Proposal Dialog */}
+      {userPublicKey && (
+        <SubmitProposalDialog
+          isOpen={isSubmitProposalDialogOpen}
+          onClose={() => setIsSubmitProposalDialogOpen(false)}
+          serviceId={service.id}
+          serviceTitle={service.title}
+          serviceBudget={service.budget}
+          userPublicKey={userPublicKey}
+        />
+      )}
     </GlassCard>
   )
 }
