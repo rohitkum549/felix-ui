@@ -131,6 +131,197 @@ class FelixApiService {
     }
   }
 
+  async getProposals(requestId: string) {
+    const url = `${this.baseURL}/api/services/get/propose?request_id=${requestId}`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Proposals API error:', errorData)
+        throw new Error(errorData.error || `Failed to fetch proposals: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error fetching proposals:', error)
+      throw error
+    }
+  }
+
+  async submitProposal(proposalData: {
+    requestId: string
+    providerKey: string
+    proposalText: string
+    bidAmount: number
+  }) {
+    const url = `${this.baseURL}/api/services/propose`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify(proposalData),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify(proposalData, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Submit proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to submit proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error submitting proposal:', error)
+      throw error
+    }
+  }
+
+  async acceptProposal(proposalId: string) {
+    const url = `${this.baseURL}/api/services/accept-proposal`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ proposalId }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Accept proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to accept proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error accepting proposal:', error)
+      throw error
+    }
+  }
+
+  async rejectProposal(proposalId: string) {
+    const url = `${this.baseURL}/api/services/reject-proposal`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ proposalId }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Reject proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to reject proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error rejecting proposal:', error)
+      throw error
+    }
+  }
+
+  async payProposal(proposalId: string, clientSecret: string) {
+    const url = `${this.baseURL}/api/services/pay`
+    const bdIssuer = process.env.NEXT_PUBLIC_BDISSUER || process.env.NEXT_BDISSUER
+    
+    if (!bdIssuer) {
+      throw new Error('BD Issuer not configured in environment variables')
+    }
+    
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ 
+        proposalId, 
+        clientSecret, 
+        bdIssuer 
+      }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId, clientSecret: '[REDACTED]', bdIssuer }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Pay proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to pay proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error paying proposal:', error)
+      throw error
+    }
+  }
+
+  async deleteProposal(proposalId: string) {
+    const url = `${this.baseURL}/api/services/delete-proposal`
+    const config: RequestInit = {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ proposalId }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Delete proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to delete proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error deleting proposal:', error)
+      throw error
+    }
+  }
+
   async purchaseService(serviceId: string, paymentData: any) {
     return this.request(`/marketplace/purchase/${serviceId}`, {
       method: "POST",
