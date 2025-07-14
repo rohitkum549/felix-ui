@@ -58,13 +58,39 @@ class FelixApiService {
     })
   }
 
-  // Blockchain Wallet APIs
+// Blockchain Wallet APIs
   async getWalletBalance() {
     return this.request("/wallet/stellar-balance")
   }
 
   async getBlueDollarTransactions() {
     return this.request("/wallet/bluedollar-transactions")
+  }
+
+  async getWalletAmounts(userSecret: string) {
+    const url = `${this.baseURL}/api/wallets/amounts?userSecret=${userSecret}`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Wallet API error:', errorData)
+        throw new Error(errorData.error || `Failed to fetch wallet amounts: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error fetching wallet amounts:', error)
+      throw error
+    }
   }
 
   async createMultiSigRequest(requestData: any) {

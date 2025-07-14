@@ -13,11 +13,14 @@ interface ProductCardProps {
     price: number;
     rating: number;
     image: string;
+    sender_id: string;
   };
   secretKey?: string;
+  userPublicKey?: string;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey, userPublicKey }) => {
+  const isOwnService = userPublicKey && product.sender_id === userPublicKey;
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -68,10 +71,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey }) 
               <Heart className="h-3 w-3" />
             </Button>
           </div>
+          {isOwnService && (
+            <div className="absolute top-3 left-3">
+              <span className="bg-emerald-600 text-white text-xs px-2 py-1 rounded-md font-medium shadow-md">Your Service</span>
+            </div>
+          )}
         </div>
 
         <div className="p-4">
-          <h3 className="text-white font-semibold mb-2 line-clamp-1">{product.title}</h3>
+          <div className="mb-1">  
+            <h3 className="text-white font-semibold line-clamp-1">{product.title}</h3>
+          </div>
           <p className="text-white/60 text-sm mb-3 line-clamp-2">{product.description}</p>
 
           <div className="flex items-center justify-between mb-3">
@@ -86,11 +96,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey }) 
           <div className="relative z-10">
             <Button
               size="sm"
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg cursor-pointer"
-              onClick={openDialog}
+              className={`w-full ${isOwnService 
+                ? 'bg-gray-600/50 hover:bg-gray-600/70 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 cursor-pointer'} text-white rounded-lg`}
+              onClick={!isOwnService ? openDialog : undefined}
+              disabled={isOwnService}
+              title={isOwnService ? "You cannot buy your own service" : ""}
             >
               <ShoppingCart className="h-3 w-3 mr-2" />
-              Buy Now
+              {isOwnService ? "Owned" : "Buy Now"}
             </Button>
           </div>
         </div>

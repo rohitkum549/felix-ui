@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { felixApi } from "@/lib/api-service"
+import { getUserSecret, formatBalance } from "@/lib/wallet-service"
 import {
   WalletIcon,
   CreditCard,
@@ -15,6 +17,7 @@ import {
   TrendingUp,
   Eye,
   EyeOff,
+  RefreshCw,
 } from "lucide-react"
 
 interface Transaction {
@@ -60,8 +63,9 @@ const mockTransactions: Transaction[] = [
 export function Wallet() {
   const [balance, setBalance] = useState(12547.89)
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
-  const [showBalance, setShowBalance] = useState(true)
+  const [showBalance, setShowBalance] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [bdBalance, setBdBalance] = useState<string>("0.00")
 
   useEffect(() => {
     loadWalletData()
@@ -70,10 +74,32 @@ export function Wallet() {
   const loadWalletData = async () => {
     setLoading(true)
     try {
-      // const balanceData = await apiService.getWalletBalance()
-      // const transactionData = await apiService.getTransactionHistory()
-      // setBalance(balanceData.balance)
-      // setTransactions(transactionData)
+      // Get user secret from our wallet service
+      const userSecret = getUserSecret()
+      
+      if (!userSecret) {
+        console.error("No wallet credentials found")
+        return
+      }
+      
+      // Call the wallet API
+      const walletData = await felixApi.getWalletAmounts(userSecret)
+      
+      // Extract the BD balance
+      if (walletData && walletData.balances && walletData.balances.bd) {
+        setBdBalance(walletData.balances.bd)
+        // Convert BD balance to number for display
+        const bdBalanceNum = parseFloat(walletData.balances.bd)
+        setBalance(bdBalanceNum)
+      }
+      
+      // We could also update user info if needed
+      // if (walletData && walletData.user_info) {
+      //   // Update user information
+      // }
+      
+      // For now, keep using mock transactions
+      // In the future, you might want to implement a real transaction API
     } catch (error) {
       console.error("Failed to load wallet data:", error)
     } finally {
@@ -133,25 +159,46 @@ export function Wallet() {
                   <p className="text-white font-medium">Main Wallet</p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowBalance(!showBalance)}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
-              >
-                {showBalance ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={loadWalletData}
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
+                  disabled={loading}
+                >
+                  <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowBalance(!showBalance)}
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
+                  aria-label={showBalance ? "Hide balance" : "Show balance"}
+                >
+                  {showBalance ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </Button>
+              </div>
             </div>
 
             <div className="mb-6">
-              <p className="text-4xl font-bold text-white mb-2">
-                {showBalance ? `$${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "••••••"}
-              </p>
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-                <span className="text-green-400 font-semibold">+12.5%</span>
-                <span className="text-white/60 text-sm">vs last month</span>
-              </div>
+              {loading ? (
+                <div className="animate-pulse">
+                  <div className="h-10 bg-white/10 rounded w-40 mb-2"></div>
+                  <div className="h-4 bg-white/10 rounded w-24"></div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-4xl font-bold text-white mb-2">
+                    {showBalance ? `BD $${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "•••••• •••"}
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    <span className="text-green-400 font-semibold">+12.5%</span>
+                    <span className="text-white/60 text-sm">vs last month</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex space-x-3">
@@ -182,11 +229,11 @@ export function Wallet() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-white/60 text-sm">Available Credit</span>
-                <span className="text-white font-semibold">$8,500</span>
+                <span className="text-white font-semibold">BD $8,500</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/60 text-sm">Used Credit</span>
-                <span className="text-white font-semibold">$1,500</span>
+                <span className="text-white font-semibold">BD $1,500</span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
                 <div
@@ -258,7 +305,7 @@ export function Wallet() {
               </div>
               <div className="text-right">
                 <p className={`font-bold ${transaction.type === "income" ? "text-green-400" : "text-red-400"}`}>
-                  {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                  {transaction.type === "income" ? "+" : "-"}BD ${transaction.amount.toFixed(2)}
                 </p>
                 <p className="text-white/60 text-sm">{transaction.date}</p>
               </div>
