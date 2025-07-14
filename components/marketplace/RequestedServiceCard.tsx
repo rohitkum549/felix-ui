@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calendar, DollarSign, FileText, Settings, User, Eye, Send, Loader2 } from "lucide-react"
+import { Calendar, DollarSign, FileText, Settings, User, Eye, Send, Loader2, X } from "lucide-react"
 import { felixApi } from "@/lib/api-service"
 import { SubmitProposalDialog } from "./SubmitProposalDialog"
+import { useToast } from "@/components/ui/use-toast"
 
 export interface RequestedService {
   id: string
@@ -42,6 +43,8 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [processingProposal, setProcessingProposal] = useState<string | null>(null)
+  const { toast } = useToast()
   
   const handleViewProposals = async () => {
     console.log('View Proposals button clicked!')
@@ -69,6 +72,70 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
       setProposals([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAcceptProposal = async (proposalId: string) => {
+    setProcessingProposal(proposalId)
+    
+    try {
+      await felixApi.acceptProposal(proposalId)
+      
+      // Update the proposal status locally
+      setProposals(prevProposals => 
+        prevProposals.map(proposal => 
+          proposal.id === proposalId 
+            ? { ...proposal, status: 'accepted' as const }
+            : proposal
+        )
+      )
+      
+      toast({
+        title: "Success",
+        description: "Proposal accepted successfully",
+        variant: "default"
+      })
+    } catch (err) {
+      console.error('Error accepting proposal:', err)
+      toast({
+        title: "Error",
+        description: "Failed to accept proposal",
+        variant: "destructive"
+      })
+    } finally {
+      setProcessingProposal(null)
+    }
+  }
+
+  const handleRejectProposal = async (proposalId: string) => {
+    setProcessingProposal(proposalId)
+    
+    try {
+      await felixApi.rejectProposal(proposalId)
+      
+      // Update the proposal status locally
+      setProposals(prevProposals => 
+        prevProposals.map(proposal => 
+          proposal.id === proposalId 
+            ? { ...proposal, status: 'rejected' as const }
+            : proposal
+        )
+      )
+      
+      toast({
+        title: "Success",
+        description: "Proposal rejected successfully",
+        variant: "default"
+      })
+    } catch (err) {
+      console.error('Error rejecting proposal:', err)
+      toast({
+        title: "Error",
+        description: "Failed to reject proposal",
+        variant: "destructive"
+      })
+    } finally {
+      setProcessingProposal(null)
     }
   }
 
@@ -197,9 +264,19 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
               <Dialog open={isProposalDialogOpen} onOpenChange={setIsProposalDialogOpen}>
               <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto bg-gray-900 border-gray-700">
                 <DialogHeader>
-                  <DialogTitle className="text-white text-xl font-bold">
-                    Proposals for "{service.title}"
-                  </DialogTitle>
+                  <div className="flex items-center justify-between">
+                    <DialogTitle className="text-white text-xl font-bold">
+                      Proposals for "{service.title}"
+                    </DialogTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsProposalDialogOpen(false)}
+                      className="text-white/60 hover:text-white hover:bg-white/10 p-2"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </DialogHeader>
                 <div className="mt-4">
                   {error ? (
@@ -256,18 +333,34 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
                                   <Button 
                                     size="sm" 
                                     variant="outline" 
-                                    className="text-green-400 border-green-400 hover:bg-green-400/10 px-3 py-1"
-                                    onClick={() => console.log('Accept proposal', proposal.id)}
+                                    className="text-green-400 border-green-400 hover:bg-green-400/10 px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={() => handleAcceptProposal(proposal.id)}
+                                    disabled={proposal.status !== 'pending' || processingProposal === proposal.id}
                                   >
-                                    Accept
+                                    {processingProposal === proposal.id ? (
+                                      <>
+                                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                        Accept
+                                      </>
+                                    ) : (
+                                      'Accept'
+                                    )}
                                   </Button>
                                   <Button 
                                     size="sm" 
                                     variant="outline" 
-                                    className="text-red-400 border-red-400 hover:bg-red-400/10 px-3 py-1"
-                                    onClick={() => console.log('Reject proposal', proposal.id)}
+                                    className="text-red-400 border-red-400 hover:bg-red-400/10 px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={() => handleRejectProposal(proposal.id)}
+                                    disabled={proposal.status !== 'pending' || processingProposal === proposal.id}
                                   >
-                                    Reject
+                                    {processingProposal === proposal.id ? (
+                                      <>
+                                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                        Reject
+                                      </>
+                                    ) : (
+                                      'Reject'
+                                    )}
                                   </Button>
                                 </div>
                               </TableCell>

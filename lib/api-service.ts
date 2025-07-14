@@ -192,6 +192,66 @@ class FelixApiService {
     }
   }
 
+  async acceptProposal(proposalId: string) {
+    const url = `${this.baseURL}/api/services/accept-proposal`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ proposalId }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Accept proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to accept proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error accepting proposal:', error)
+      throw error
+    }
+  }
+
+  async rejectProposal(proposalId: string) {
+    const url = `${this.baseURL}/api/services/reject-proposal`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ proposalId }),
+    }
+    
+    console.log('API Request URL:', url)
+    console.log('API Request Body:', JSON.stringify({ proposalId }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Reject proposal API error:', errorData)
+        throw new Error(errorData.error || `Failed to reject proposal: ${response.statusText}`)
+      }
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error rejecting proposal:', error)
+      throw error
+    }
+  }
+
   async purchaseService(serviceId: string, paymentData: any) {
     return this.request(`/marketplace/purchase/${serviceId}`, {
       method: "POST",
