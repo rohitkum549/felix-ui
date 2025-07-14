@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { handleBuyNow } from "./buyNowHandler"
 import { ProductCard } from "./ProductCard"
 import { AddServiceDialog } from "./AddServiceDialog"
+import { RequestServiceDialog } from "./RequestServiceDialog"
 
 interface MarketplaceItem {
   id: string
@@ -146,6 +147,7 @@ export function Marketplace() {
 
         <div className="flex items-center space-x-4">
           <AddServiceDialog onServiceAdded={() => loadServices()} />
+          <RequestServiceDialog onServiceRequested={() => loadServices()} />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-4 w-4" />
             <Input
