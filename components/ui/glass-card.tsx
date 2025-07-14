@@ -26,7 +26,7 @@ export function GlassCard({ children, className, variant = "default", hover = tr
         variants[variant],
         hover && "hover:scale-[1.01] hover:shadow-2xl hover:bg-white/12 hover:border-white/35",
         glow && "shadow-[0_0_50px_rgba(59,130,246,0.15)]",
-        "before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-blue-500/5 before:opacity-0 before:transition-opacity before:duration-500",
+        "before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-br before:from-white/10 before:via-transparent before:to-blue-500/5 before:opacity-0 before:transition-opacity before:duration-500 before:pointer-events-none",
         hover && "hover:before:opacity-100",
         className,
       )}
