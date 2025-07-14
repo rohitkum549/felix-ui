@@ -5,7 +5,7 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Star, Heart, ShoppingCart, Eye, Download, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Filter, Star, Heart, ShoppingCart, Eye, Download, TrendingUp, ChevronLeft, ChevronRight, List, Bell } from "lucide-react"
 import { useMarketplace } from "@/hooks/use-marketplace"
 import { Service } from "@/lib/marketplace-service"
 import { useProfile } from "@/hooks/use-profile"
@@ -14,6 +14,7 @@ import { handleBuyNow } from "./buyNowHandler"
 import { ProductCard } from "./ProductCard"
 import { AddServiceDialog } from "./AddServiceDialog"
 import { RequestServiceDialog } from "./RequestServiceDialog"
+import { RequestedServiceCard, RequestedService } from "./RequestedServiceCard"
 
 interface MarketplaceItem {
   id: string
@@ -112,9 +113,40 @@ export function Marketplace() {
   const [items, setItems] = useState<MarketplaceItem[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
+  const [activeTab, setActiveTab] = useState<"all" | "requested">("all")
+  const [requestedServices, setRequestedServices] = useState<RequestedService[]>([])
+  const [requestedLoading, setRequestedLoading] = useState(false)
+  const [requestedError, setRequestedError] = useState<string | null>(null)
   
   // Derived categories from actual data
   const [categories, setCategories] = useState<string[]>(["All"])
+  
+  // Function to fetch requested services
+  const fetchRequestedServices = async () => {
+    setRequestedLoading(true);
+    setRequestedError(null);
+    
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+      const response = await fetch(`${apiBaseUrl}/api/services/request`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch requested services');
+      }
+      
+      const data = await response.json();
+      
+      // The API returns an array of requested services directly
+      const services = Array.isArray(data) ? data : [data];
+      setRequestedServices(services);
+      
+    } catch (error) {
+      setRequestedError(error instanceof Error ? error.message : 'Failed to fetch requested services');
+      console.error('Error fetching requested services:', error);
+    } finally {
+      setRequestedLoading(false);
+    }
+  };
   
   // Map API services to UI items whenever services change
   useEffect(() => {
@@ -128,6 +160,13 @@ export function Marketplace() {
     }
   }, [services]);
   
+  // Fetch requested services when tab changes to requested
+  useEffect(() => {
+    if (activeTab === "requested") {
+      fetchRequestedServices();
+    }
+  }, [activeTab]);
+  
   const filteredItems = items.filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,6 +174,16 @@ export function Marketplace() {
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory
     return matchesSearch && matchesCategory
   })
+  
+  const filteredRequestedServices = requestedServices.filter((service) => {
+    const matchesSearch =
+      service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesSearch
+  })
+  
+  const currentLoading = activeTab === "all" ? loading : requestedLoading;
+  const currentError = activeTab === "all" ? error : requestedError;
 
   return (
     <div className="space-y-8">
@@ -147,7 +196,12 @@ export function Marketplace() {
 
         <div className="flex items-center space-x-4">
           <AddServiceDialog onServiceAdded={() => loadServices()} />
-          <RequestServiceDialog onServiceRequested={() => loadServices()} />
+          <RequestServiceDialog onServiceRequested={() => {
+            loadServices();
+            if (activeTab === "requested") {
+              fetchRequestedServices();
+            }
+          }} />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-4 w-4" />
             <Input
@@ -164,30 +218,61 @@ export function Marketplace() {
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="flex space-x-2 overflow-x-auto pb-2">
-        {categories.map((category) => (
-          <Button
-            key={category}
-            variant={selectedCategory === category ? "default" : "ghost"}
-            onClick={() => setSelectedCategory(category)}
-            className={`rounded-xl whitespace-nowrap ${
-              selectedCategory === category
-                ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-                : "text-white/70 hover:text-white hover:bg-white/10"
-            }`}
-          >
-            {category}
-          </Button>
-        ))}
+      {/* Navigation Tabs */}
+      <div className="flex space-x-4 mb-6">
+        <Button
+          onClick={() => setActiveTab("all")}
+          variant={activeTab === "all" ? "default" : "ghost"}
+          className={
+            activeTab === "all"
+              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              : "text-white/70 hover:text-white hover:bg-white/10"
+          }
+        >
+          <List className="h-4 w-4 mr-2" />
+          All Services
+        </Button>
+        <Button
+          onClick={() => setActiveTab("requested")}
+          variant={activeTab === "requested" ? "default" : "ghost"}
+          className={
+            activeTab === "requested"
+              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+              : "text-white/70 hover:text-white hover:bg-white/10"
+          }
+        >
+          <Bell className="h-4 w-4 mr-2" />
+          Requested Services
+        </Button>
       </div>
 
-      {/* Featured Items */}
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-          <TrendingUp className="h-6 w-6 mr-2 text-yellow-400" />
-          Featured Products
-        </h2>
+      {/* Categories - Only show for all services */}
+      {activeTab === "all" && (
+        <div className="flex space-x-2 overflow-x-auto pb-2">
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? "default" : "ghost"}
+              onClick={() => setSelectedCategory(category)}
+              className={`rounded-xl whitespace-nowrap ${
+                selectedCategory === category
+                  ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {/* Featured Items - Only show for all services */}
+      {activeTab === "all" && (
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <TrendingUp className="h-6 w-6 mr-2 text-yellow-400" />
+            Featured Products
+          </h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {filteredItems
             .filter((item) => item.featured)
@@ -270,84 +355,101 @@ export function Marketplace() {
             ))}
         </div>
       </div>
+      )}
 
       {/* All Products */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">All Products</h2>
+          <h2 className="text-2xl font-bold text-white">{activeTab === "all" ? "All Products" : "Requested Services"}</h2>
           
-          {/* Pagination Controls */}
-          <div className="flex items-center space-x-2">
-            <div className="text-white/60 text-sm">
-              {pagination.currentPage * pagination.itemsPerPage + 1}-
-              {Math.min((pagination.currentPage + 1) * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems}
+          {/* Pagination Controls - Only show for all services */}
+          {activeTab === "all" && (
+            <div className="flex items-center space-x-2">
+              <div className="text-white/60 text-sm">
+                {pagination.currentPage * pagination.itemsPerPage + 1}-
+                {Math.min((pagination.currentPage + 1) * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems}
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={loadPreviousPage} 
+                  disabled={!pagination.hasPreviousPage || currentLoading}
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={loadNextPage} 
+                  disabled={!pagination.hasNextPage || currentLoading}
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex space-x-2">
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={loadPreviousPage} 
-                disabled={!pagination.hasPreviousPage || loading}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={loadNextPage} 
-                disabled={!pagination.hasNextPage || loading}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
         
-        {loading && (
+        {currentLoading && (
           <div className="flex justify-center items-center min-h-[200px]">
-            <div className="text-white">Loading services...</div>
+            <div className="text-white">Loading {activeTab === "all" ? "services" : "requested services"}...</div>
           </div>
         )}
         
-        {error && (
+        {currentError && (
           <div className="flex justify-center items-center min-h-[200px]">
-            <div className="text-red-400">Error loading services: {error.message}</div>
+            <div className="text-red-400">Error loading {activeTab === "all" ? "services" : "requested services"}: {currentError}</div>
           </div>
         )}
         
-        {!loading && !error && (
+        {!currentLoading && !currentError && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredItems.length > 0 ? (
-              filteredItems.map((item) => (
-                <ProductCard key={item.id} product={item} secretKey={profile?.secret_key} userPublicKey={profile?.public_key} />
-              ))
+            {activeTab === "all" ? (
+              filteredItems.length > 0 ? (
+                filteredItems.map((item) => (
+                  <ProductCard key={item.id} product={item} secretKey={profile?.secret_key} userPublicKey={profile?.public_key} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-10 text-white/60">
+                  No services found matching your criteria.
+                </div>
+              )
             ) : (
-              <div className="col-span-full text-center py-10 text-white/60">
-                No services found matching your criteria.
-              </div>
+              filteredRequestedServices.length > 0 ? (
+                filteredRequestedServices.map((service) => (
+                  <RequestedServiceCard key={service.id} service={service} userPublicKey={profile?.public_key} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-10 text-white/60">
+                  No requested services found matching your criteria.
+                </div>
+              )
             )}
           </div>
         )}
         
-        {/* Items per page selector */}
-        <div className="flex justify-end mt-6">
-          <div className="flex items-center space-x-2">
-            <span className="text-white/60 text-sm">Items per page:</span>
-            <select 
-              className="bg-white/10 border border-white/20 text-white rounded-lg p-1 [&>option]:text-black dark:[&>option]:text-white [&>option]:bg-white dark:[&>option]:bg-gray-800"
-              value={pagination.itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              disabled={loading}
-            >
-              <option value="6">6</option>
-              <option value="12">12</option>
-              <option value="24">24</option>
-              <option value="48">48</option>
-            </select>
+        {/* Items per page selector - Only show for all services */}
+        {activeTab === "all" && (
+          <div className="flex justify-end mt-6">
+            <div className="flex items-center space-x-2">
+              <span className="text-white/60 text-sm">Items per page:</span>
+              <select 
+                className="bg-white/10 border border-white/20 text-white rounded-lg p-1 [&>option]:text-black dark:[&>option]:text-white [&>option]:bg-white dark:[&>option]:bg-gray-800"
+                value={pagination.itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                disabled={currentLoading}
+              >
+                <option value="6">6</option>
+                <option value="12">12</option>
+                <option value="24">24</option>
+                <option value="48">48</option>
+              </select>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

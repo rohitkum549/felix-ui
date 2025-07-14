@@ -26,6 +26,8 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
   
   // Form state
   const [formData, setFormData] = useState({
+    title: "",
+    requirements: "",
     description: "",
     budget: 20
   })
@@ -43,7 +45,11 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('Form submitted with data:', formData)
+    console.log('Profile:', profile)
+    
     if (!profile?.public_key) {
+      console.error('No profile or public key found')
       toast({
         title: "Error",
         description: "User profile not found. Please login again.",
@@ -56,17 +62,27 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
     
     try {
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+      const requestBody = {
+        clientKey: profile.public_key,
+        description: formData.description,
+        budget: formData.budget,
+        title: formData.title,
+        requirements: formData.requirements
+      };
+      
+      console.log('API Base URL:', apiBaseUrl)
+      console.log('Request body:', requestBody)
+      
       const response = await fetch(`${apiBaseUrl}/api/services/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          clientKey: profile.public_key,
-          description: formData.description,
-          budget: formData.budget
-        }),
+        body: JSON.stringify(requestBody),
       })
+      
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
       
       if (!response.ok) {
         const errorData = await response.json()
@@ -82,6 +98,8 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
       
       // Reset form and close dialog
       setFormData({
+        title: "",
+        requirements: "",
         description: "",
         budget: 20
       })
@@ -122,6 +140,32 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title" className="text-white">Service Title</Label>
+              <Input
+                id="title"
+                name="title"
+                placeholder="Enter a title for your service request..."
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="requirements" className="text-white">Requirements</Label>
+              <Textarea
+                id="requirements"
+                name="requirements"
+                placeholder="Specify your requirements..."
+                value={formData.requirements}
+                onChange={handleChange}
+                required
+                className="bg-gray-800 border-gray-700 text-white min-h-[80px]"
+              />
+            </div>
+            
             <div className="grid gap-2">
               <Label htmlFor="description" className="text-white">Service Description</Label>
               <Textarea
