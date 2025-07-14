@@ -19,6 +19,8 @@ import {
   BarChart3,
 } from "lucide-react"
 
+import { FinancialDashboard } from "@/components/dashboard/financial-dashboard"
+
 export default function Component() {
   const billsData = [
     { gradient: "from-purple-500 to-purple-700", icon: Smile },
@@ -98,6 +100,12 @@ export default function Component() {
               <AvatarFallback>JD</AvatarFallback>
             </Avatar>
           </div>
+        </div>
+        
+        {/* Wallet Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Wallet Overview</h2>
+          <FinancialDashboard />
         </div>
 
         {/* Bills Section */}

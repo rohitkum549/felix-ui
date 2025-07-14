@@ -12,6 +12,7 @@ import { useProfile } from "@/hooks/use-profile"
 import { useToast } from "@/hooks/use-toast"
 import { handleBuyNow } from "./buyNowHandler"
 import { ProductCard } from "./ProductCard"
+import { AddServiceDialog } from "./AddServiceDialog"
 
 interface MarketplaceItem {
   id: string
@@ -25,6 +26,7 @@ interface MarketplaceItem {
   image: string
   featured: boolean
   tags: string[]
+  sender_id: string
 }
 
 // Map API service to UI MarketplaceItem
@@ -40,7 +42,8 @@ const mapServiceToMarketplaceItem = (service: Service): MarketplaceItem => {
     category: service.currency || 'BD',
     image: '/placeholder.svg?height=200&width=300',
     featured: Math.random() > 0.5, // Randomly set some as featured
-    tags: [service.status || 'pending', service.currency || 'BD']
+    tags: [service.status || 'pending', service.currency || 'BD'],
+    sender_id: service.sender_id
   }
 }
 
@@ -57,6 +60,7 @@ const mockItems: MarketplaceItem[] = [
     image: "/placeholder.svg?height=200&width=300",
     featured: true,
     tags: ["React", "TypeScript", "Tailwind"],
+    sender_id: "mock-sender-id-1",
   },
   {
     id: "2",
@@ -70,6 +74,7 @@ const mockItems: MarketplaceItem[] = [
     image: "/placeholder.svg?height=200&width=300",
     featured: false,
     tags: ["Components", "Design System"],
+    sender_id: "mock-sender-id-2",
   },
   {
     id: "3",
@@ -83,6 +88,7 @@ const mockItems: MarketplaceItem[] = [
     image: "/placeholder.svg?height=200&width=300",
     featured: true,
     tags: ["Analytics", "Charts", "Data"],
+    sender_id: "mock-sender-id-3",
   },
 ]
 
@@ -139,6 +145,7 @@ export function Marketplace() {
         </div>
 
         <div className="flex items-center space-x-4">
+          <AddServiceDialog onServiceAdded={() => loadServices()} />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-4 w-4" />
             <Input
@@ -190,8 +197,11 @@ export function Marketplace() {
                     alt={item.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute top-4 left-4">
+                  <div className="absolute top-4 left-4 flex space-x-2">
                     <Badge className="bg-yellow-500/90 text-black font-semibold">Featured</Badge>
+                    {profile?.public_key === item.sender_id && (
+                      <Badge className="bg-emerald-600 text-white font-semibold">Your Service</Badge>
+                    )}
                   </div>
                   <div className="absolute top-4 right-4 flex space-x-2">
                     <Button
@@ -243,11 +253,15 @@ export function Marketplace() {
                   </div>
 
                   <Button 
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl relative z-10 cursor-pointer"
-                    onClick={() => handleBuyNow(item.id, profile?.secret_key)}
+                    className={`w-full ${profile?.public_key === item.sender_id 
+                      ? 'bg-gray-600/50 hover:bg-gray-600/70 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 cursor-pointer'} text-white rounded-xl relative z-10`}
+                    onClick={() => profile?.public_key !== item.sender_id ? handleBuyNow(item.id, profile?.secret_key) : undefined}
+                    disabled={profile?.public_key === item.sender_id}
+                    title={profile?.public_key === item.sender_id ? "You cannot buy your own service" : ""}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    Buy Now
+                    {profile?.public_key === item.sender_id ? "Owned" : "Buy Now"}
                   </Button>
                 </div>
               </GlassCard>
@@ -305,7 +319,7 @@ export function Marketplace() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
-                <ProductCard key={item.id} product={item} secretKey={profile?.secret_key} />
+                <ProductCard key={item.id} product={item} secretKey={profile?.secret_key} userPublicKey={profile?.public_key} />
               ))
             ) : (
               <div className="col-span-full text-center py-10 text-white/60">
