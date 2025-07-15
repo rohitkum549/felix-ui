@@ -57,7 +57,6 @@ const navItems: NavItem[] = [
   },
   { icon: Wallet, label: "BlueDollar Wallet", path: "/wallet", description: "Digital Currency Management" },
   { icon: CreditCard, label: "Transactions", path: "/transactions", description: "Blockchain History" },
-  { icon: Blocks, label: "Asset Portfolio", path: "/assets", description: "Multi-Asset Management" },
   {
     icon: Shield,
     label: "Multi-Signature",
