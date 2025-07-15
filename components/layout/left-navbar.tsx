@@ -28,6 +28,7 @@ import {
   Blocks,
   Shield,
   LogOut,
+  UserCog,
 } from "lucide-react"
 
 interface NavItem {
@@ -57,7 +58,6 @@ const navItems: NavItem[] = [
   },
   { icon: Wallet, label: "BlueDollar Wallet", path: "/wallet", description: "Digital Currency Management" },
   { icon: CreditCard, label: "Transactions", path: "/transactions", description: "Blockchain History" },
-  { icon: Blocks, label: "Asset Portfolio", path: "/assets", description: "Multi-Asset Management" },
   {
     icon: Shield,
     label: "Multi-Signature",
@@ -65,6 +65,13 @@ const navItems: NavItem[] = [
     badge: 2,
     description: "Advanced Security",
     requiredRoles: ["coe-admin", "project-admin"],
+  },
+  {
+    icon: UserCog,
+    label: "User Management",
+    path: "/user-management",
+    description: "Admin User Control",
+    requiredRoles: ["Admin"],
   },
   { icon: Settings, label: "Platform Settings", path: "/settings", description: "Configuration" },
 ]
@@ -77,7 +84,7 @@ interface LeftNavbarProps {
 export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
-  const { user, logout, hasRole } = useAuth()
+  const { user, logout, hasRole, isAdmin } = useAuth()
 
   const handleLogout = (e) => {
     e.preventDefault()
@@ -90,14 +97,35 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
       localStorage.removeItem("felix_refresh_token")
       localStorage.removeItem("felix_user_info")
       
-      // Direct window location redirect to Keycloak logout
-      const keycloakLogoutUrl = "https://iam-uat.cateina.com/realms/Cateina_Felix_Op/protocol/openid-connect/logout"
-      const redirectUri = encodeURIComponent("http://localhost:3000")
+      // Clear all felix-related data
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.startsWith('felix_')) {
+          localStorage.removeItem(key)
+        }
+      })
       
-      console.log("🔥 Redirecting to:", `${keycloakLogoutUrl}?redirect_uri=${redirectUri}`)
+      // Also clear session storage
+      const sessionKeys = Object.keys(sessionStorage)
+      sessionKeys.forEach(key => {
+        if (key.startsWith('felix_')) {
+          sessionStorage.removeItem(key)
+        }
+      })
       
-      // Redirect directly to Keycloak logout page
-      window.location.href = `${keycloakLogoutUrl}?redirect_uri=${redirectUri}`
+      // Direct window location redirect to Keycloak logout with proper parameters
+      const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "https://iam-uat.cateina.com/"
+      const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "Cateina_Felix_Op"
+      const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "felix-ui"
+      const appUrl = window.location.origin // Use current origin to handle any port
+      
+      const keycloakLogoutUrl = `${keycloakUrl}realms/${realm}/protocol/openid-connect/logout`
+      const postLogoutRedirectUri = encodeURIComponent(appUrl)
+      
+      console.log("🔥 Redirecting to:", `${keycloakLogoutUrl}?client_id=${clientId}&post_logout_redirect_uri=${postLogoutRedirectUri}`)
+      
+      // Redirect directly to Keycloak logout page with proper parameters
+      window.location.href = `${keycloakLogoutUrl}?client_id=${clientId}&post_logout_redirect_uri=${postLogoutRedirectUri}`
     } catch (error) {
       console.error("Logout failed:", error)
       alert("Logout failed. Please try again.")
@@ -109,6 +137,11 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
     if (!item.requiredRoles || item.requiredRoles.length === 0) {
       return true
     }
+    // Special handling for User Management (Admin role from session)
+    if (item.path === "/user-management") {
+      return isAdmin()
+    }
+    // For other items, use the original role checking
     return item.requiredRoles.some((role) => hasRole(role))
   })
 

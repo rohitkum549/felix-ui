@@ -89,7 +89,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey, us
               <Star className="h-3 w-3 text-yellow-400 fill-current" />
               <span className="text-white text-sm">{product.rating}</span>
             </div>
-            <p className="text-white font-bold">B$ {product.price}</p>
+            <p className="text-white font-bold">BD {product.price}$</p>
           </div>
 
           {/* The Buy Now button with dialog trigger */}

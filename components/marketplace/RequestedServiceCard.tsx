@@ -41,6 +41,7 @@ interface RequestedServiceCardProps {
 export function RequestedServiceCard({ service, userPublicKey }: RequestedServiceCardProps) {
   const [isProposalDialogOpen, setIsProposalDialogOpen] = useState(false)
   const [isSubmitProposalDialogOpen, setIsSubmitProposalDialogOpen] = useState(false)
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,6 +57,11 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
   const handleApplyForService = () => {
     console.log('Apply for service', service.id)
     setIsSubmitProposalDialogOpen(true)
+  }
+  
+  const handleViewDetails = () => {
+    console.log('View details', service.id)
+    setIsDetailsDialogOpen(true)
   }
   
   const fetchProposals = async () => {
@@ -312,9 +318,8 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
         {/* Budget and Date */}
         <div className="flex items-center justify-between pt-4 border-t border-white/10">
           <div className="flex items-center space-x-1">
-            <DollarSign className="h-4 w-4 text-green-400" />
             <span className="text-white font-medium">Budget:</span>
-            <span className="text-green-400 font-bold">${service.budget}</span>
+            <span className="text-green-400 font-bold">BD {service.budget}$</span>
           </div>
           <div className="flex items-center space-x-1 text-white/60 text-sm">
             <Calendar className="h-4 w-4" />
@@ -392,7 +397,7 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
                                 </div>
                               </TableCell>
                               <TableCell className="text-green-400 font-semibold">
-                                ${proposal.bid_amount}
+                                BD {proposal.bid_amount}$
                               </TableCell>
                               <TableCell>
                                 <Badge className={`${getProposalStatusColor(proposal.status)} border font-medium`} variant="outline">
@@ -509,11 +514,12 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
           )}
           <Button 
             variant="outline"
-            className="px-4 border-white/20 text-white/70 hover:text-white hover:bg-white/10 rounded-xl pointer-events-auto cursor-pointer"
+            className="px-4 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 hover:border-gray-500 rounded-xl pointer-events-auto cursor-pointer"
             size="sm"
             type="button"
-            onClick={() => console.log('View details', service.id)}
+            onClick={handleViewDetails}
           >
+            <Eye className="h-4 w-4 mr-2" />
             View Details
           </Button>
         </div>
@@ -530,6 +536,114 @@ export function RequestedServiceCard({ service, userPublicKey }: RequestedServic
           userPublicKey={userPublicKey}
         />
       )}
+      
+      {/* View Details Dialog */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-white text-xl font-bold">
+                Service Details: "{service.title}"
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDetailsDialogOpen(false)}
+                className="text-white/60 hover:text-white hover:bg-white/10 p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="mt-4 space-y-6">
+            {/* Service Information */}
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-white font-semibold mb-2 flex items-center">
+                    <User className="h-4 w-4 mr-2 text-blue-400" />
+                    Client Information
+                  </h4>
+                  <p className="text-white/70 font-mono text-sm">
+                    {service.client_key.slice(0, 16)}...{service.client_key.slice(-16)}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold mb-2 flex items-center">
+                    Budget
+                  </h4>
+                  <p className="text-green-400 font-bold text-lg">BD {service.budget}$</p>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold mb-2 flex items-center">
+                    <Badge className="h-4 w-4 mr-2 text-purple-400" />
+                    Status
+                  </h4>
+                  <Badge 
+                    className={`${getStatusColor(service.status)} border font-medium`}
+                    variant="outline"
+                  >
+                    {service.status.toUpperCase()}
+                  </Badge>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold mb-2 flex items-center">
+                    <Calendar className="h-4 w-4 mr-2 text-yellow-400" />
+                    Created
+                  </h4>
+                  <p className="text-white/70 text-sm">{formatDate(service.created_at)}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Description */}
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h4 className="text-white font-semibold mb-4 flex items-center">
+                <FileText className="h-4 w-4 mr-2 text-blue-400" />
+                Description
+              </h4>
+              <p className="text-white/80 leading-relaxed">{service.description}</p>
+            </div>
+            
+            {/* Requirements */}
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h4 className="text-white font-semibold mb-4 flex items-center">
+                <Settings className="h-4 w-4 mr-2 text-purple-400" />
+                Requirements
+              </h4>
+              <p className="text-white/80 leading-relaxed">{service.requirements}</p>
+            </div>
+            
+            {/* Action buttons in details */}
+            <div className="flex gap-3 pt-4">
+              {!isOwnService && (
+                <Button 
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl"
+                  onClick={() => {
+                    setIsDetailsDialogOpen(false)
+                    handleApplyForService()
+                  }}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Apply for Service
+                </Button>
+              )}
+              {isOwnService && (
+                <Button 
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl"
+                  onClick={() => {
+                    setIsDetailsDialogOpen(false)
+                    handleViewProposals()
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Proposals
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </GlassCard>
   )
 }

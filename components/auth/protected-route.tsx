@@ -34,7 +34,11 @@ export function ProtectedRoute({ children, requiredRoles = [], requiredResourceR
         if (!isAuthenticated && !token) {
           console.log("🔒 No authentication found, redirecting to Keycloak login")
           // Redirect to Keycloak login page
-          window.location.href = "https://iam-uat.cateina.com/realms/Cateina_Felix_Op/protocol/openid-connect/auth?client_id=felix-ui&redirect_uri=" + encodeURIComponent(window.location.origin) + "&response_type=code&scope=openid"
+          const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "https://iam-uat.cateina.com/"
+          const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "Cateina_Felix_Op"
+          const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "felix-ui"
+          const loginUrl = `${keycloakUrl}realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=code&scope=openid`
+          window.location.href = loginUrl
         }
       }
     }
@@ -51,7 +55,11 @@ export function ProtectedRoute({ children, requiredRoles = [], requiredResourceR
   useEffect(() => {
     if (authTimeout && !isAuthenticated) {
       console.log("🔒 Authentication timeout, redirecting to Keycloak login")
-      window.location.href = "https://iam-uat.cateina.com/realms/Cateina_Felix_Op/protocol/openid-connect/auth?client_id=felix-ui&redirect_uri=" + encodeURIComponent(window.location.origin) + "&response_type=code&scope=openid"
+      const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "https://iam-uat.cateina.com/"
+      const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "Cateina_Felix_Op"
+      const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "felix-ui"
+      const loginUrl = `${keycloakUrl}realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=code&scope=openid`
+      window.location.href = loginUrl
     }
   }, [authTimeout, isAuthenticated])
 

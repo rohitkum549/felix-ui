@@ -7,53 +7,61 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Phone } from "lucide-react"
+import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building } from "lucide-react"
 
 interface User {
   id: string
-  name: string
+  username: string
   email: string
-  phone: string
   role: string
-  status: "active" | "inactive" | "pending"
-  joinDate: string
-  lastActive: string
-  avatar: string
+  public_key: string
+  secret_key: string
+  entity_belongs: string
+  entity_admin_name: string
+  created_at: string | null
+  updated_at: string | null
+  status?: "active" | "inactive" | "pending"
 }
 
 const mockUsers: User[] = [
   {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 234 567 8900",
+    id: "ad7114e4-d1b0-42be-a6ff-c1002e75443d",
+    username: "Rohit Jha",
+    email: "rohit@cateina.com",
     role: "Admin",
+    public_key: "GAYSV4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
+    secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRX",
+    entity_belongs: "Managers",
+    entity_admin_name: "Rohit Jha",
+    created_at: "2024-01-15",
+    updated_at: "2024-07-15",
     status: "active",
-    joinDate: "2024-01-15",
-    lastActive: "2 hours ago",
-    avatar: "/placeholder.svg?height=40&width=40",
   },
   {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    phone: "+1 234 567 8901",
+    id: "bd7114e4-d1b0-42be-a6ff-c1002e75443e",
+    username: "Sarah Johnson",
+    email: "sarah@cateina.com",
     role: "User",
+    public_key: "GAYSY4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
+    secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRY",
+    entity_belongs: "Developers",
+    entity_admin_name: "Sarah Johnson",
+    created_at: "2024-02-20",
+    updated_at: "2024-07-10",
     status: "active",
-    joinDate: "2024-02-20",
-    lastActive: "1 day ago",
-    avatar: "/placeholder.svg?height=40&width=40",
   },
   {
-    id: "3",
-    name: "Mike Wilson",
-    email: "mike@example.com",
-    phone: "+1 234 567 8902",
+    id: "cd7114e4-d1b0-42be-a6ff-c1002e75443f",
+    username: "Mike Wilson",
+    email: "mike@cateina.com",
     role: "Moderator",
+    public_key: "GAYSZ4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
+    secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRZ",
+    entity_belongs: "Support",
+    entity_admin_name: "Mike Wilson",
+    created_at: "2024-01-10",
+    updated_at: "2024-07-05",
     status: "inactive",
-    joinDate: "2024-01-10",
-    lastActive: "1 week ago",
-    avatar: "/placeholder.svg?height=40&width=40",
   },
 ]
 
@@ -83,8 +91,9 @@ export function UserManagement() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.entity_belongs.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = selectedRole === "All" || user.role === selectedRole
     return matchesSearch && matchesRole
   })
@@ -123,11 +132,6 @@ export function UserManagement() {
           <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
           <p className="text-white/60">Manage and monitor user accounts</p>
         </div>
-
-        <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl">
-          <Plus className="h-4 w-4 mr-2" />
-          Add New User
-        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -155,6 +159,29 @@ export function UserManagement() {
           </GlassCard>
         ))}
       </div>
+
+      {/* Action Buttons */}
+      <GlassCard variant="premium" className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl">
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+            <Button className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl">
+              <Search className="h-4 w-4 mr-2" />
+              Export Data
+            </Button>
+            <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl">
+              <Edit className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+          </div>
+          <div className="text-white/60 text-sm">
+            Manage user accounts and permissions
+          </div>
+        </div>
+      </GlassCard>
 
       {/* Filters */}
       <GlassCard variant="premium" className="p-6">
@@ -197,9 +224,9 @@ export function UserManagement() {
                 <TableHead className="text-white/80 font-semibold">User</TableHead>
                 <TableHead className="text-white/80 font-semibold">Contact</TableHead>
                 <TableHead className="text-white/80 font-semibold">Role</TableHead>
+                <TableHead className="text-white/80 font-semibold">Entity</TableHead>
+                <TableHead className="text-white/80 font-semibold">Public Key</TableHead>
                 <TableHead className="text-white/80 font-semibold">Status</TableHead>
-                <TableHead className="text-white/80 font-semibold">Join Date</TableHead>
-                <TableHead className="text-white/80 font-semibold">Last Active</TableHead>
                 <TableHead className="text-white/80 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -208,14 +235,18 @@ export function UserManagement() {
                 <TableRow key={user.id} className="border-white/10 hover:bg-white/5">
                   <TableCell>
                     <div className="flex items-center space-x-3">
-                      <img
-                        src={user.avatar || "/placeholder.svg"}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500"
-                      />
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">
+                          {user.username
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
+                        </span>
+                      </div>
                       <div>
-                        <p className="text-white font-medium">{user.name}</p>
-                        <p className="text-white/60 text-sm">ID: {user.id}</p>
+                        <p className="text-white font-medium">{user.username}</p>
+                        <p className="text-white/60 text-sm">ID: {user.id.substring(0, 8)}...</p>
                       </div>
                     </div>
                   </TableCell>
@@ -226,8 +257,8 @@ export function UserManagement() {
                         <span className="text-white text-sm">{user.email}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Phone className="h-3 w-3 text-white/60" />
-                        <span className="text-white/60 text-sm">{user.phone}</span>
+                        <Building className="h-3 w-3 text-white/60" />
+                        <span className="text-white/60 text-sm">{user.entity_admin_name}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -235,10 +266,22 @@ export function UserManagement() {
                     <Badge className={`${getRoleColor(user.role)} border-0`}>{user.role}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`${getStatusColor(user.status)} border-0 capitalize`}>{user.status}</Badge>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Building className="h-3 w-3 text-white/60" />
+                        <span className="text-white text-sm">{user.entity_belongs}</span>
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-white/80">{user.joinDate}</TableCell>
-                  <TableCell className="text-white/60">{user.lastActive}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Key className="h-3 w-3 text-white/60" />
+                      <span className="text-white/60 text-sm font-mono">{user.public_key.substring(0, 20)}...</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={`${getStatusColor(user.status || "active")} border-0 capitalize`}>{user.status || "active"}</Badge>
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

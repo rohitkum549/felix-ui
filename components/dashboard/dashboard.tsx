@@ -129,7 +129,7 @@ useEffect(() => {
                   Your blockchain-powered Centre of Excellence & Project management hub
                 </p>
                 <p className="text-white/50 text-sm mt-2">
-                  Stellar Network • Version 1.0 • Secure Multi-Signature Environment
+                  Stellar Network • Version 1.0 
                   {profileLoading && <span className="ml-2 animate-pulse">Loading profile...</span>}
                 </p>
               </div>

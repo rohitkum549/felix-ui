@@ -190,7 +190,7 @@ export function Wallet() {
               ) : (
                 <>
                   <p className="text-4xl font-bold text-white mb-2">
-                    {showBalance ? `BD $${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "•••••• •••"}
+                    {showBalance ? `BD ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}$` : "•••••• •••"}
                   </p>
                   <div className="flex items-center space-x-2">
                     <TrendingUp className="h-4 w-4 text-green-400" />
@@ -229,11 +229,11 @@ export function Wallet() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-white/60 text-sm">Available Credit</span>
-                <span className="text-white font-semibold">BD $8,500</span>
+                <span className="text-white font-semibold">BD 8,500$</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/60 text-sm">Used Credit</span>
-                <span className="text-white font-semibold">BD $1,500</span>
+                <span className="text-white font-semibold">BD 1,500$</span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2">
                 <div
@@ -305,7 +305,7 @@ export function Wallet() {
               </div>
               <div className="text-right">
                 <p className={`font-bold ${transaction.type === "income" ? "text-green-400" : "text-red-400"}`}>
-                  {transaction.type === "income" ? "+" : "-"}BD ${transaction.amount.toFixed(2)}
+                  {transaction.type === "income" ? "+" : "-"}BD {transaction.amount.toFixed(2)}$
                 </p>
                 <p className="text-white/60 text-sm">{transaction.date}</p>
               </div>
