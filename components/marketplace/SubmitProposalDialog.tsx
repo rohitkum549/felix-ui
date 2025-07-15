@@ -112,8 +112,7 @@ export function SubmitProposalDialog({
             <h4 className="font-semibold text-white mb-2">Service Request</h4>
             <p className="text-white/80 text-sm mb-2">{serviceTitle}</p>
             <div className="flex items-center gap-2 text-sm text-green-400">
-              <DollarSign className="h-4 w-4" />
-              <span>Budget: ${serviceBudget}</span>
+              <span>Budget: BD {serviceBudget}$</span>
             </div>
           </div>
 
@@ -136,7 +135,6 @@ export function SubmitProposalDialog({
 
             <div className="space-y-2">
               <Label htmlFor="bidAmount" className="text-white/80 flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
                 Bid Amount
               </Label>
               <Input
