@@ -17,6 +17,7 @@ const pageComponents = {
   "/dashboard": Dashboard,
   "/marketplace": Marketplace,
   "/users": UserManagement,
+  "/user-management": UserManagement,
   "/wallet": Wallet,
   "/transactions": Transactions,
   "/assets": Dashboard, // Placeholder for Asset Portfolio
@@ -28,6 +29,7 @@ const pageTitles = {
   "/dashboard": "Felix Dashboard",
   "/marketplace": "Service Marketplace",
   "/users": "Member Management",
+  "/user-management": "User Management",
   "/wallet": "BlueDollar Wallet",
   "/transactions": "Blockchain Transactions",
   "/assets": "Asset Portfolio",

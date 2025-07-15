@@ -28,6 +28,7 @@ import {
   Blocks,
   Shield,
   LogOut,
+  UserCog,
 } from "lucide-react"
 
 interface NavItem {
@@ -65,6 +66,13 @@ const navItems: NavItem[] = [
     description: "Advanced Security",
     requiredRoles: ["coe-admin", "project-admin"],
   },
+  {
+    icon: UserCog,
+    label: "User Management",
+    path: "/user-management",
+    description: "Admin User Control",
+    requiredRoles: ["Admin"],
+  },
   { icon: Settings, label: "Platform Settings", path: "/settings", description: "Configuration" },
 ]
 
@@ -76,7 +84,7 @@ interface LeftNavbarProps {
 export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
-  const { user, logout, hasRole } = useAuth()
+  const { user, logout, hasRole, isAdmin } = useAuth()
 
   const handleLogout = (e) => {
     e.preventDefault()
@@ -108,6 +116,11 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
     if (!item.requiredRoles || item.requiredRoles.length === 0) {
       return true
     }
+    // Special handling for User Management (Admin role from session)
+    if (item.path === "/user-management") {
+      return isAdmin()
+    }
+    // For other items, use the original role checking
     return item.requiredRoles.some((role) => hasRole(role))
   })
 

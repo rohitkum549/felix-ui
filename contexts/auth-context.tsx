@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import KeycloakService from "@/lib/keycloak"
+import { profileService } from "@/lib/profile-service"
 
 interface User {
   id: string
@@ -22,6 +23,7 @@ interface AuthContextType {
   register: () => Promise<void>
   hasRole: (role: string) => boolean
   hasResourceRole: (role: string, resource: string) => boolean
+  isAdmin: () => boolean
   getToken: () => string | undefined
   refreshToken: () => Promise<boolean>
 }
@@ -136,6 +138,16 @@ await keycloakService.logout()
     return keycloakService.hasResourceRole(role, resource)
   }
 
+  const isAdmin = (): boolean => {
+    try {
+      const profileData = profileService.getProfileFromSession()
+      return profileData?.role === "Admin"
+    } catch (error) {
+      console.error("Error checking admin role:", error)
+      return false
+    }
+  }
+
   const getToken = (): string | undefined => {
     return keycloakService.getToken()
   }
@@ -153,6 +165,7 @@ await keycloakService.logout()
     register,
     hasRole,
     hasResourceRole,
+    isAdmin,
     getToken,
     refreshToken,
   }
