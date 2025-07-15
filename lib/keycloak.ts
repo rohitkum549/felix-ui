@@ -130,6 +130,7 @@ class KeycloakService {
       localStorage.setItem("felix_user_info", JSON.stringify(this.keycloakInstance.tokenParsed))
     }
   }
+  
 
   private setupTokenRefresh(): void {
     // Clear any existing interval
