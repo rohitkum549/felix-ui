@@ -97,14 +97,35 @@ export function LeftNavbar({ activeItem, onItemClick }: LeftNavbarProps) {
       localStorage.removeItem("felix_refresh_token")
       localStorage.removeItem("felix_user_info")
       
-      // Direct window location redirect to Keycloak logout
-      const keycloakLogoutUrl = "https://iam-uat.cateina.com/realms/Cateina_Felix_Op/protocol/openid-connect/logout"
-      const redirectUri = encodeURIComponent("http://localhost:3000")
+      // Clear all felix-related data
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.startsWith('felix_')) {
+          localStorage.removeItem(key)
+        }
+      })
       
-      console.log("🔥 Redirecting to:", `${keycloakLogoutUrl}?redirect_uri=${redirectUri}`)
+      // Also clear session storage
+      const sessionKeys = Object.keys(sessionStorage)
+      sessionKeys.forEach(key => {
+        if (key.startsWith('felix_')) {
+          sessionStorage.removeItem(key)
+        }
+      })
       
-      // Redirect directly to Keycloak logout page
-      window.location.href = `${keycloakLogoutUrl}?redirect_uri=${redirectUri}`
+      // Direct window location redirect to Keycloak logout with proper parameters
+      const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "https://iam-uat.cateina.com/"
+      const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "Cateina_Felix_Op"
+      const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "felix-ui"
+      const appUrl = window.location.origin // Use current origin to handle any port
+      
+      const keycloakLogoutUrl = `${keycloakUrl}realms/${realm}/protocol/openid-connect/logout`
+      const postLogoutRedirectUri = encodeURIComponent(appUrl)
+      
+      console.log("🔥 Redirecting to:", `${keycloakLogoutUrl}?client_id=${clientId}&post_logout_redirect_uri=${postLogoutRedirectUri}`)
+      
+      // Redirect directly to Keycloak logout page with proper parameters
+      window.location.href = `${keycloakLogoutUrl}?client_id=${clientId}&post_logout_redirect_uri=${postLogoutRedirectUri}`
     } catch (error) {
       console.error("Logout failed:", error)
       alert("Logout failed. Please try again.")

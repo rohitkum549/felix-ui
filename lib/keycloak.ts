@@ -1,9 +1,17 @@
 import Keycloak from "keycloak-js"
 
+// Utility function to get the current app URL
+const getAppUrl = (): string => {
+  if (typeof window !== "undefined") {
+    return window.location.origin
+  }
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+}
+
 const keycloakConfig = {
-  url: "https://iam-uat.cateina.com/",
-  realm: "Cateina_Felix_Op",
-  clientId: "felix-ui",
+  url: process.env.NEXT_PUBLIC_KEYCLOAK_URL || "https://iam-uat.cateina.com/",
+  realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "Cateina_Felix_Op",
+  clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "felix-ui",
 }
 
 let keycloak: Keycloak | null = null
@@ -148,7 +156,7 @@ class KeycloakService {
 
   public async login(): Promise<void> {
     await this.keycloakInstance.login({
-      redirectUri: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
+      redirectUri: getAppUrl(),
       prompt: "login" as const,
     })
   }
@@ -166,15 +174,15 @@ class KeycloakService {
     // Clear any additional application data
     this.clearAllApplicationData()
     
-    // Logout from Keycloak with redirect to port 3000
+    // Logout from Keycloak with proper post_logout_redirect_uri
     await this.keycloakInstance.logout({
-      redirectUri: "http://localhost:3000",
+      redirectUri: getAppUrl(),
     })
   }
 
   public async register(): Promise<void> {
     await this.keycloakInstance.register({
-      redirectUri: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
+      redirectUri: getAppUrl(),
     })
   }
 
