@@ -42,6 +42,11 @@ class FelixApiService {
     return this.request("/transactions/recent")
   }
 
+  async getTransactionsByUser(userId: string) {
+    const endpoint = `/api/transactions/by-user?user_id=${userId}&status=completed`
+    return this.request(endpoint)
+  }
+
   // CoE & Projects APIs
   async getCoEServices() {
     return this.request("/coe/services")
