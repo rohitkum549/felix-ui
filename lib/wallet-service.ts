@@ -16,8 +16,19 @@
  */
 export function getUserSecret(): string {
   // For production, you should ONLY use this from session storage
-  const userSecret = sessionStorage.getItem('userSecret')
-  
+  const userData = sessionStorage.getItem('felix_profile_data');
+  let userSecret: string | undefined = '';
+
+  if (userData) {
+    try {
+      const parsed = JSON.parse(userData);
+      userSecret = parsed.secret_key;
+    } catch (e) {
+      console.error('Failed to parse felix_profile_data from sessionStorage');
+      userSecret = '';
+    }
+  }
+
   // Fallback for development or testing (this should be removed in production)
   if (!userSecret && process.env.NODE_ENV === 'development') {
     // This is only for development testing
