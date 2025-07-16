@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building } from "lucide-react"
+import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building, Wallet, Shield, Coins } from "lucide-react"
 import { AddUserDialog } from "./AddUserDialog"
 import { felixApi } from "@/lib/api-service"
 import { useToast } from "@/hooks/use-toast"
@@ -21,8 +21,11 @@ interface User {
   secret_key: string
   entity_belongs_to: string
   entity_manager: string
+  is_wallet_funded: boolean
+  is_trustline_added: boolean
+  is_bd_received: boolean
   created_at: string | null
-  updated_at: string | null
+  updated_at?: string | null
   status?: "active" | "inactive" | "pending"
 }
 
@@ -36,6 +39,9 @@ const mockUsers: User[] = [
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRX",
     entity_belongs_to: "Managers",
     entity_manager: "Rohit Jha",
+    is_wallet_funded: true,
+    is_trustline_added: true,
+    is_bd_received: true,
     created_at: "2024-01-15",
     updated_at: "2024-07-15",
     status: "active",
@@ -49,6 +55,9 @@ const mockUsers: User[] = [
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRY",
     entity_belongs_to: "Developers",
     entity_manager: "Sarah Johnson",
+    is_wallet_funded: true,
+    is_trustline_added: false,
+    is_bd_received: false,
     created_at: "2024-02-20",
     updated_at: "2024-07-10",
     status: "active",
@@ -62,6 +71,9 @@ const mockUsers: User[] = [
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRZ",
     entity_belongs_to: "Support",
     entity_manager: "Mike Wilson",
+    is_wallet_funded: false,
+    is_trustline_added: false,
+    is_bd_received: false,
     created_at: "2024-01-10",
     updated_at: "2024-07-05",
     status: "inactive",
@@ -98,6 +110,91 @@ export function UserManagement() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleConnectWallet = async (user: User) => {
+    try {
+      // Add your wallet connection logic here
+      console.log('Connecting wallet for user:', user.id)
+      toast({
+        title: "Wallet Connection",
+        description: `Connecting wallet for ${user.username}...`,
+      })
+      // You would call your wallet connection API here
+    } catch (error: any) {
+      console.error('Error connecting wallet:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to connect wallet",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleAddTrustline = async (user: User) => {
+    try {
+      // Add your trustline addition logic here
+      console.log('Adding trustline for user:', user.id)
+      toast({
+        title: "Trustline Addition",
+        description: `Adding trustline for ${user.username}...`,
+      })
+      // You would call your trustline addition API here
+    } catch (error: any) {
+      console.error('Error adding trustline:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add trustline",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSendAsset = async (user: User) => {
+    try {
+      // Add your asset sending logic here
+      console.log('Sending asset to user:', user.id)
+      toast({
+        title: "Asset Transfer",
+        description: `Sending asset to ${user.username}...`,
+      })
+      // You would call your asset sending API here
+    } catch (error: any) {
+      console.error('Error sending asset:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send asset",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const getNextAction = (user: User) => {
+    if (!user.is_wallet_funded) {
+      return {
+        label: "Connect Wallet",
+        icon: Wallet,
+        action: () => handleConnectWallet(user),
+        color: "text-blue-400"
+      }
+    }
+    if (!user.is_trustline_added) {
+      return {
+        label: "Add Trustline",
+        icon: Shield,
+        action: () => handleAddTrustline(user),
+        color: "text-green-400"
+      }
+    }
+    if (!user.is_bd_received) {
+      return {
+        label: "Send Asset",
+        icon: Coins,
+        action: () => handleSendAsset(user),
+        color: "text-yellow-400"
+      }
+    }
+    return null
   }
 
   const filteredUsers = users.filter((user) => {
@@ -272,7 +369,7 @@ export function UserManagement() {
                 <TableHead className="text-white/80 font-semibold">Role</TableHead>
                 <TableHead className="text-white/80 font-semibold">Entity</TableHead>
                 <TableHead className="text-white/80 font-semibold">Public Key</TableHead>
-                <TableHead className="text-white/80 font-semibold">Status</TableHead>
+                <TableHead className="text-white/80 font-semibold">Status & Setup</TableHead>
                 <TableHead className="text-white/80 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -326,7 +423,17 @@ export function UserManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`${getStatusColor(user.status || "active")} border-0 capitalize`}>{user.status || "active"}</Badge>
+                    <div className="space-y-1">
+                      <Badge className={`${getStatusColor(user.status || "active")} border-0 capitalize`}>{user.status || "active"}</Badge>
+                      <div className="flex items-center space-x-1 mt-1">
+                        <div className={`w-2 h-2 rounded-full ${user.is_wallet_funded ? 'bg-green-400' : 'bg-gray-500'}`} title="Wallet Funded" />
+                        <div className={`w-2 h-2 rounded-full ${user.is_trustline_added ? 'bg-green-400' : 'bg-gray-500'}`} title="Trustline Added" />
+                        <div className={`w-2 h-2 rounded-full ${user.is_bd_received ? 'bg-green-400' : 'bg-gray-500'}`} title="Asset Received" />
+                        <span className="text-white/40 text-xs ml-1">
+                          {[user.is_wallet_funded, user.is_trustline_added, user.is_bd_received].filter(Boolean).length}/3
+                        </span>
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -340,6 +447,33 @@ export function UserManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="bg-black/80 backdrop-blur-xl border-white/20">
+                        {/* Dynamic wallet action */}
+                        {(() => {
+                          const nextAction = getNextAction(user)
+                          if (nextAction) {
+                            const IconComponent = nextAction.icon
+                            return (
+                              <DropdownMenuItem 
+                                className={`${nextAction.color} hover:bg-white/10 cursor-pointer`}
+                                onClick={nextAction.action}
+                              >
+                                <IconComponent className="h-4 w-4 mr-2" />
+                                {nextAction.label}
+                              </DropdownMenuItem>
+                            )
+                          }
+                          return (
+                            <DropdownMenuItem className="text-green-400 hover:bg-white/10">
+                              <UserCheck className="h-4 w-4 mr-2" />
+                              Wallet Setup Complete
+                            </DropdownMenuItem>
+                          )
+                        })()}
+                        
+                        {/* Separator */}
+                        <div className="border-t border-white/10 my-1" />
+                        
+                        {/* Standard actions */}
                         <DropdownMenuItem className="text-white hover:bg-white/10">
                           <Edit className="h-4 w-4 mr-2" />
                           Edit User
