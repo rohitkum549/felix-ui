@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { felixApi } from "@/lib/api-service"
 import { getUserSecret, formatBalance } from "@/lib/wallet-service"
+import { SendMoneyDialog } from "./SendMoneyDialog"
 import {
   WalletIcon,
   CreditCard,
@@ -66,6 +67,7 @@ export function Wallet() {
   const [showBalance, setShowBalance] = useState(false)
   const [loading, setLoading] = useState(false)
   const [bdBalance, setBdBalance] = useState<string>("0.00")
+  const [isSendMoneyOpen, setIsSendMoneyOpen] = useState(false)
 
   useEffect(() => {
     loadWalletData()
@@ -134,7 +136,11 @@ export function Wallet() {
             <Plus className="h-4 w-4 mr-2" />
             Add Money
           </Button>
-          <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl bg-transparent">
+          <Button 
+            variant="outline" 
+            className="border-white/20 text-white hover:bg-white/10 rounded-xl bg-transparent"
+            onClick={() => setIsSendMoneyOpen(true)}
+          >
             <Send className="h-4 w-4 mr-2" />
             Send Money
           </Button>
@@ -202,7 +208,10 @@ export function Wallet() {
             </div>
 
             <div className="flex space-x-3">
-              <Button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl">
+              <Button 
+                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl"
+                onClick={() => setIsSendMoneyOpen(true)}
+              >
                 <ArrowUpRight className="h-4 w-4 mr-2" />
                 Send
               </Button>
@@ -313,6 +322,16 @@ export function Wallet() {
           ))}
         </div>
       </GlassCard>
+      
+      {/* Send Money Dialog */}
+      <SendMoneyDialog 
+        isOpen={isSendMoneyOpen} 
+        onClose={() => setIsSendMoneyOpen(false)}
+        onSuccess={() => {
+          // Refresh wallet data after successful transaction
+          loadWalletData()
+        }}
+      />
     </div>
   )
 }

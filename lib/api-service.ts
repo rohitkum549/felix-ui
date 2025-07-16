@@ -372,6 +372,38 @@ class FelixApiService {
     })
   }
 
+  async sendMoney(sendRequest: { senderSecret: string; receiverPublic: string; amount: string }) {
+    const url = `${this.baseURL}/api/wallets/BdPayment`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify(sendRequest),
+    }
+    
+    console.log('Send Money API Request URL:', url)
+    console.log('Send Money API Request Body:', JSON.stringify(sendRequest, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Send money API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to send money: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Send Money API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error sending money:', error)
+      throw error
+    }
+  }
+
 // Settings APIs
   async getBlockchainSettings() {
     return this.request("/settings/blockchain")
@@ -384,6 +416,203 @@ class FelixApiService {
     })
   }
   
+// User Management APIs
+  async getAllUsers() {
+    const url = `${this.baseURL}/api/users`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    console.log('Get All Users API Request URL:', url)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Get all users API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fetch users: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Get All Users API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error fetching all users:', error)
+      throw error
+    }
+  }
+
+  async getUsersByGroup(groupId: string) {
+    const url = `${this.baseURL}/api/users/group?groupId=${groupId}`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    console.log('Get Users By Group API Request URL:', url)
+    console.log('Get Users By Group API Request GroupId:', groupId)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Get users by group API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fetch users: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Get Users By Group API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error fetching users by group:', error)
+      throw error
+    }
+  }
+
+  async fundWallet(publicKey: string) {
+    const url = `${this.baseURL}/api/users/fund-wallet`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ publicKey }),
+    }
+    
+    console.log('Fund Wallet API Request URL:', url)
+    console.log('Fund Wallet API Request Body:', JSON.stringify({ publicKey }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Fund wallet API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fund wallet: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Fund Wallet API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error funding wallet:', error)
+      throw error
+    }
+  }
+
+  async addTrustline(secretKey: string) {
+    const url = `${this.baseURL}/api/users/add-trustline`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ secretKey }),
+    }
+    
+    console.log('Add Trustline API Request URL:', url)
+    console.log('Add Trustline API Request Body:', JSON.stringify({ secretKey: '[REDACTED]' }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Add trustline API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to add trustline: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Add Trustline API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error adding trustline:', error)
+      throw error
+    }
+  }
+
+  async sendAsset(publicKey: string, assetCode: string) {
+    const url = `${this.baseURL}/api/users/send-bd`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ publicKey, assetCode }),
+    }
+    
+    console.log('Send Asset API Request URL:', url)
+    console.log('Send Asset API Request Body:', JSON.stringify({ publicKey, assetCode }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Send asset API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to send asset: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Send Asset API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error sending asset:', error)
+      throw error
+    }
+  }
+
+  async createUser(userData: {
+    username: string
+    email: string
+    role: string
+    password: string
+    entity_belongs_to: string
+    entity_manager: string
+  }) {
+    const url = `${this.baseURL}/api/users/create`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify(userData),
+    }
+    
+    console.log('Create User API Request URL:', url)
+    console.log('Create User API Request Body:', JSON.stringify(userData, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Create user API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to create user: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Create User API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error creating user:', error)
+      throw error
+    }
+  }
+
 // User Profile APIs
   async fetchUserProfile(email: string, retryCount = 0, maxRetries = 3) {
     // Use API base URL from environment for profile

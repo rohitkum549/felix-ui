@@ -7,7 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building } from "lucide-react"
+import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building, Wallet, Shield, Coins, Loader2 } from "lucide-react"
+import { AddUserDialog } from "./AddUserDialog"
+import { SendAssetDialog } from "./SendAssetDialog"
+import { felixApi } from "@/lib/api-service"
+import { useToast } from "@/hooks/use-toast"
 
 interface User {
   id: string
@@ -16,10 +20,13 @@ interface User {
   role: string
   public_key: string
   secret_key: string
-  entity_belongs: string
-  entity_admin_name: string
+  entity_belongs_to: string
+  entity_manager: string
+  is_wallet_funded: boolean
+  is_trustline_added: boolean
+  is_bd_received: boolean
   created_at: string | null
-  updated_at: string | null
+  updated_at?: string | null
   status?: "active" | "inactive" | "pending"
 }
 
@@ -31,8 +38,11 @@ const mockUsers: User[] = [
     role: "Admin",
     public_key: "GAYSV4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRX",
-    entity_belongs: "Managers",
-    entity_admin_name: "Rohit Jha",
+    entity_belongs_to: "Managers",
+    entity_manager: "Rohit Jha",
+    is_wallet_funded: true,
+    is_trustline_added: true,
+    is_bd_received: true,
     created_at: "2024-01-15",
     updated_at: "2024-07-15",
     status: "active",
@@ -44,8 +54,11 @@ const mockUsers: User[] = [
     role: "User",
     public_key: "GAYSY4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRY",
-    entity_belongs: "Developers",
-    entity_admin_name: "Sarah Johnson",
+    entity_belongs_to: "Developers",
+    entity_manager: "Sarah Johnson",
+    is_wallet_funded: true,
+    is_trustline_added: false,
+    is_bd_received: false,
     created_at: "2024-02-20",
     updated_at: "2024-07-10",
     status: "active",
@@ -57,8 +70,11 @@ const mockUsers: User[] = [
     role: "Moderator",
     public_key: "GAYSZ4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRZ",
-    entity_belongs: "Support",
-    entity_admin_name: "Mike Wilson",
+    entity_belongs_to: "Support",
+    entity_manager: "Mike Wilson",
+    is_wallet_funded: false,
+    is_trustline_added: false,
+    is_bd_received: false,
     created_at: "2024-01-10",
     updated_at: "2024-07-05",
     status: "inactive",
@@ -66,34 +82,206 @@ const mockUsers: User[] = [
 ]
 
 export function UserManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedRole, setSelectedRole] = useState("All")
+  const [selectedGroup, setSelectedGroup] = useState("DevOps")
   const [loading, setLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [sendAssetDialog, setSendAssetDialog] = useState<{ isOpen: boolean; user: User | null }>({
+    isOpen: false,
+    user: null,
+  })
+  const { toast } = useToast()
 
   const roles = ["All", "Admin", "Moderator", "User"]
+  const groups = ["DevOps", "QA", "HR", "Managers"]
 
   useEffect(() => {
     loadUsers()
-  }, [])
+  }, [selectedGroup])
 
   const loadUsers = async () => {
     setLoading(true)
     try {
-      // const data = await apiService.getUsers()
-      // setUsers(data)
-    } catch (error) {
+      const data = await felixApi.getUsersByGroup(selectedGroup)
+      setUsers(data.users || data || [])
+    } catch (error: any) {
       console.error("Failed to load users:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load users. Please try again.",
+        variant: "destructive",
+        duration: 5000, // 5 seconds
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleConnectWallet = async (user: User) => {
+    if (actionLoading === user.id) return // Prevent multiple simultaneous requests
+    
+    setActionLoading(user.id)
+    
+    try {
+      console.log('Funding wallet for user:', user.id, 'with public key:', user.public_key)
+      
+      // Show loading toast
+      toast({
+        title: "Wallet Funding",
+        description: `Funding wallet for ${user.username}...`,
+        duration: 5000, // 5 seconds
+      })
+      
+      // Call the API to fund the wallet
+      const response = await felixApi.fundWallet(user.public_key)
+      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: `Wallet funded successfully for ${user.username}`,
+        variant: "default",
+        duration: 5000, // 5 seconds
+      })
+      
+      // Update the user's wallet status locally
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === user.id 
+            ? { ...u, is_wallet_funded: true }
+            : u
+        )
+      )
+      
+      console.log('Wallet funded successfully:', response)
+      
+    } catch (error: any) {
+      console.error('Error funding wallet:', error)
+      
+      // Show error toast
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fund wallet. Please try again.",
+        variant: "destructive",
+        duration: 5000, // 5 seconds
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleAddTrustline = async (user: User) => {
+    if (actionLoading === user.id) return // Prevent multiple simultaneous requests
+    
+    setActionLoading(user.id)
+    
+    try {
+      console.log('Adding trustline for user:', user.id, 'with secret key:', user.secret_key.substring(0, 10) + '...')
+      
+      // Show loading toast
+      toast({
+        title: "Trustline Addition",
+        description: `Adding trustline for ${user.username}...`,
+        duration: 5000, // 5 seconds
+      })
+      
+      // Call the API to add trustline
+      const response = await felixApi.addTrustline(user.secret_key)
+      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: `Trustline added successfully for ${user.username}`,
+        variant: "default",
+        duration: 5000, // 5 seconds
+      })
+      
+      // Update the user's trustline status locally
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === user.id 
+            ? { ...u, is_trustline_added: true }
+            : u
+        )
+      )
+      
+      console.log('Trustline added successfully:', response)
+      
+    } catch (error: any) {
+      console.error('Error adding trustline:', error)
+      
+      // Show error toast
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add trustline. Please try again.",
+        variant: "destructive",
+        duration: 5000, // 5 seconds
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleSendAsset = (user: User) => {
+    console.log('Opening send asset dialog for user:', user.id)
+    setSendAssetDialog({ isOpen: true, user })
+  }
+
+  const handleSendAssetSuccess = () => {
+    if (!sendAssetDialog.user) return
+    
+    const user = sendAssetDialog.user
+    
+    // Update the user's asset status locally
+    setUsers(prevUsers => 
+      prevUsers.map(u => 
+        u.id === user.id 
+          ? { ...u, is_bd_received: true }
+          : u
+      )
+    )
+    
+    console.log('Asset sent successfully, updated user status')
+  }
+
+  const handleCloseSendAssetDialog = () => {
+    setSendAssetDialog({ isOpen: false, user: null })
+  }
+
+  const getNextAction = (user: User) => {
+    if (!user.is_wallet_funded) {
+      return {
+        label: "Connect Wallet",
+        icon: Wallet,
+        action: () => handleConnectWallet(user),
+        color: "text-blue-400"
+      }
+    }
+    if (!user.is_trustline_added) {
+      return {
+        label: "Add Trustline",
+        icon: Shield,
+        action: () => handleAddTrustline(user),
+        color: "text-green-400"
+      }
+    }
+    if (!user.is_bd_received) {
+      return {
+        label: "Send Asset",
+        icon: Coins,
+        action: () => handleSendAsset(user),
+        color: "text-yellow-400"
+      }
+    }
+    return null
   }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.entity_belongs.toLowerCase().includes(searchTerm.toLowerCase())
+      user.entity_belongs_to.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = selectedRole === "All" || user.role === selectedRole
     return matchesSearch && matchesRole
   })
@@ -164,18 +352,13 @@ export function UserManagement() {
       <GlassCard variant="premium" className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl">
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
-            <Button className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl">
-              <Search className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-            <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl">
-              <Edit className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
+            <AddUserDialog onUserAdded={(userData) => {
+              // Handle the new user data here
+              console.log('New user added:', userData);
+              // You can add the user to your state or refetch users
+              // Optionally refresh the users list
+              loadUsers();
+            }} />
           </div>
           <div className="text-white/60 text-sm">
             Manage user accounts and permissions
@@ -196,21 +379,45 @@ export function UserManagement() {
             />
           </div>
 
-          <div className="flex space-x-2">
-            {roles.map((role) => (
-              <Button
-                key={role}
-                variant={selectedRole === role ? "default" : "ghost"}
-                onClick={() => setSelectedRole(role)}
-                className={`rounded-xl ${
-                  selectedRole === role
-                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-                    : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                {role}
-              </Button>
-            ))}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Group Filter */}
+            <div className="flex space-x-2">
+              <span className="text-white/60 text-sm font-medium self-center mr-2">Group:</span>
+              {groups.map((group) => (
+                <Button
+                  key={group}
+                  variant={selectedGroup === group ? "default" : "ghost"}
+                  onClick={() => setSelectedGroup(group)}
+                  disabled={loading}
+                  className={`rounded-xl ${
+                    selectedGroup === group
+                      ? "bg-gradient-to-r from-green-500 to-teal-500 text-white"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {group}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Role Filter */}
+            <div className="flex space-x-2">
+              <span className="text-white/60 text-sm font-medium self-center mr-2">Role:</span>
+              {roles.map((role) => (
+                <Button
+                  key={role}
+                  variant={selectedRole === role ? "default" : "ghost"}
+                  onClick={() => setSelectedRole(role)}
+                  className={`rounded-xl ${
+                    selectedRole === role
+                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {role}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </GlassCard>
@@ -218,15 +425,23 @@ export function UserManagement() {
       {/* Users Table */}
       <GlassCard variant="ultra" className="overflow-hidden">
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/10 hover:bg-white/5">
+          {loading && (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              <span className="ml-2 text-white/60">Loading users...</span>
+            </div>
+          )}
+          
+          {!loading && (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/10 hover:bg-white/5">
                 <TableHead className="text-white/80 font-semibold">User</TableHead>
                 <TableHead className="text-white/80 font-semibold">Contact</TableHead>
                 <TableHead className="text-white/80 font-semibold">Role</TableHead>
                 <TableHead className="text-white/80 font-semibold">Entity</TableHead>
                 <TableHead className="text-white/80 font-semibold">Public Key</TableHead>
-                <TableHead className="text-white/80 font-semibold">Status</TableHead>
+                <TableHead className="text-white/80 font-semibold">Status & Setup</TableHead>
                 <TableHead className="text-white/80 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -258,7 +473,7 @@ export function UserManagement() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Building className="h-3 w-3 text-white/60" />
-                        <span className="text-white/60 text-sm">{user.entity_admin_name}</span>
+                        <span className="text-white/60 text-sm">{user.entity_manager}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -269,7 +484,7 @@ export function UserManagement() {
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <Building className="h-3 w-3 text-white/60" />
-                        <span className="text-white text-sm">{user.entity_belongs}</span>
+                        <span className="text-white text-sm">{user.entity_belongs_to}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -280,7 +495,17 @@ export function UserManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`${getStatusColor(user.status || "active")} border-0 capitalize`}>{user.status || "active"}</Badge>
+                    <div className="space-y-1">
+                      <Badge className={`${getStatusColor(user.status || "active")} border-0 capitalize`}>{user.status || "active"}</Badge>
+                      <div className="flex items-center space-x-1 mt-1">
+                        <div className={`w-2 h-2 rounded-full ${user.is_wallet_funded ? 'bg-green-400' : 'bg-gray-500'}`} title="Wallet Funded" />
+                        <div className={`w-2 h-2 rounded-full ${user.is_trustline_added ? 'bg-green-400' : 'bg-gray-500'}`} title="Trustline Added" />
+                        <div className={`w-2 h-2 rounded-full ${user.is_bd_received ? 'bg-green-400' : 'bg-gray-500'}`} title="Asset Received" />
+                        <span className="text-white/40 text-xs ml-1">
+                          {[user.is_wallet_funded, user.is_trustline_added, user.is_bd_received].filter(Boolean).length}/3
+                        </span>
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -294,6 +519,40 @@ export function UserManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="bg-black/80 backdrop-blur-xl border-white/20">
+                        {/* Dynamic wallet action */}
+                        {(() => {
+                          const nextAction = getNextAction(user)
+                          const isLoading = actionLoading === user.id
+                          
+                          if (nextAction) {
+                            const IconComponent = nextAction.icon
+                            return (
+                              <DropdownMenuItem 
+                                className={`${nextAction.color} hover:bg-white/10 cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={isLoading ? undefined : nextAction.action}
+                                disabled={isLoading}
+                              >
+                                {isLoading ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <IconComponent className="h-4 w-4 mr-2" />
+                                )}
+                                {isLoading ? 'Processing...' : nextAction.label}
+                              </DropdownMenuItem>
+                            )
+                          }
+                          return (
+                            <DropdownMenuItem className="text-green-400 hover:bg-white/10">
+                              <UserCheck className="h-4 w-4 mr-2" />
+                              Wallet Setup Complete
+                            </DropdownMenuItem>
+                          )
+                        })()}
+                        
+                        {/* Separator */}
+                        <div className="border-t border-white/10 my-1" />
+                        
+                        {/* Standard actions */}
                         <DropdownMenuItem className="text-white hover:bg-white/10">
                           <Edit className="h-4 w-4 mr-2" />
                           Edit User
@@ -320,10 +579,32 @@ export function UserManagement() {
                   </TableCell>
                 </TableRow>
               ))}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          )}
+          
+          {!loading && filteredUsers.length === 0 && (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <UserX className="h-12 w-12 text-white/40 mx-auto mb-4" />
+                <p className="text-white/60">No users found for the selected group.</p>
+                <p className="text-white/40 text-sm mt-2">Try selecting a different group or adding a new user.</p>
+              </div>
+            </div>
+          )}
         </div>
       </GlassCard>
+      
+      {/* Send Asset Dialog */}
+      {sendAssetDialog.user && (
+        <SendAssetDialog
+          publicKey={sendAssetDialog.user.public_key}
+          username={sendAssetDialog.user.username}
+          isOpen={sendAssetDialog.isOpen}
+          onClose={handleCloseSendAssetDialog}
+          onSuccess={handleSendAssetSuccess}
+        />
+      )}
     </div>
   )
 }
