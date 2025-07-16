@@ -542,6 +542,38 @@ class FelixApiService {
     }
   }
 
+  async sendAsset(publicKey: string, assetCode: string) {
+    const url = `${this.baseURL}/api/users/send-bd`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ publicKey, assetCode }),
+    }
+    
+    console.log('Send Asset API Request URL:', url)
+    console.log('Send Asset API Request Body:', JSON.stringify({ publicKey, assetCode }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Send asset API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to send asset: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Send Asset API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error sending asset:', error)
+      throw error
+    }
+  }
+
   async createUser(userData: {
     username: string
     email: string

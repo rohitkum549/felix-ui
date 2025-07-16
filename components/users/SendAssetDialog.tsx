@@ -15,30 +15,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Key } from 'lucide-react';
+import { Plus, Key, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { felixApi } from '@/lib/api-service';
+import { useToast } from '@/hooks/use-toast';
 
 interface SendAssetDialogProps {
   publicKey: string;
   onClose: () => void;
   isOpen: boolean;
-  onSubmit: (assetCode: string) => void;
+  onSuccess: () => void;
+  username: string;
 }
 
 export function SendAssetDialog({
   publicKey,
   onClose,
   isOpen,
-  onSubmit,
+  onSuccess,
+  username,
 }: SendAssetDialogProps) {
   const [assetCode, setAssetCode] = useState('BD');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleAssetChange = (value: string) => {
     setAssetCode(value);
   };
 
-  const handleSubmit = () => {
-    onSubmit(assetCode);
+  const handleSubmit = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      console.log('Sending asset to user with public key:', publicKey, 'asset code:', assetCode);
+      
+      // Show loading toast
+      toast({
+        title: "Asset Transfer",
+        description: `Sending ${assetCode} to ${username}...`,
+        duration: 5000, // 5 seconds
+      });
+      
+      // Call the API to send asset
+      const response = await felixApi.sendAsset(publicKey, assetCode);
+      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: `${assetCode} sent successfully to ${username}`,
+        variant: "default",
+        duration: 5000, // 5 seconds
+      });
+      
+      console.log('Asset sent successfully:', response);
+      
+      // Call success callback
+      onSuccess();
+      
+      // Close dialog
+      onClose();
+      
+    } catch (error: any) {
+      console.error('Error sending asset:', error);
+      
+      // Show error toast
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send asset. Please try again.",
+        variant: "destructive",
+        duration: 5000, // 5 seconds
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (isLoading) return; // Prevent closing while loading
     onClose();
   };
 
@@ -72,8 +127,8 @@ export function SendAssetDialog({
             <Label htmlFor="assetCode" className="text-white/80 font-medium">
               Asset Code
             </Label>
-            <Select value={assetCode} onValueChange={handleAssetChange}>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30">
+            <Select value={assetCode} onValueChange={handleAssetChange} disabled={isLoading}>
+              <SelectTrigger className="bg-white/10 border-white/20 text-white rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30 disabled:opacity-50">
                 <SelectValue placeholder="Select asset" />
               </SelectTrigger>
               <SelectContent className="bg-black/90 backdrop-blur-xl border-white/20">
@@ -90,16 +145,25 @@ export function SendAssetDialog({
         <DialogFooter className="space-x-2">
           <Button
             variant="outline"
-            onClick={onClose}
-            className="border-white/20 text-white hover:bg-white/10 rounded-xl"
+            onClick={handleClose}
+            disabled={isLoading}
+            className="border-white/20 text-white hover:bg-white/10 rounded-xl disabled:opacity-50"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl"
+            disabled={isLoading}
+            className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl disabled:opacity-50"
           >
-            Send
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              "Send"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

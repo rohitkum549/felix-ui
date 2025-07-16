@@ -228,60 +228,21 @@ export function UserManagement() {
     setSendAssetDialog({ isOpen: true, user })
   }
 
-  const handleSendAssetSubmit = async (assetCode: string) => {
+  const handleSendAssetSuccess = () => {
     if (!sendAssetDialog.user) return
     
     const user = sendAssetDialog.user
-    setActionLoading(user.id)
     
-    try {
-      console.log('Sending asset to user:', user.id, 'with asset code:', assetCode)
-      
-      // Show loading toast
-      toast({
-        title: "Asset Transfer",
-        description: `Sending ${assetCode} to ${user.username}...`,
-        duration: 5000, // 5 seconds
-      })
-      
-      // Here you would call your asset sending API
-      // const response = await felixApi.sendAsset(user.public_key, assetCode)
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Show success toast
-      toast({
-        title: "Success!",
-        description: `${assetCode} sent successfully to ${user.username}`,
-        variant: "default",
-        duration: 5000, // 5 seconds
-      })
-      
-      // Update the user's asset status locally
-      setUsers(prevUsers => 
-        prevUsers.map(u => 
-          u.id === user.id 
-            ? { ...u, is_bd_received: true }
-            : u
-        )
+    // Update the user's asset status locally
+    setUsers(prevUsers => 
+      prevUsers.map(u => 
+        u.id === user.id 
+          ? { ...u, is_bd_received: true }
+          : u
       )
-      
-      console.log('Asset sent successfully')
-      
-    } catch (error: any) {
-      console.error('Error sending asset:', error)
-      
-      // Show error toast
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send asset. Please try again.",
-        variant: "destructive",
-        duration: 5000, // 5 seconds
-      })
-    } finally {
-      setActionLoading(null)
-    }
+    )
+    
+    console.log('Asset sent successfully, updated user status')
   }
 
   const handleCloseSendAssetDialog = () => {
@@ -398,14 +359,6 @@ export function UserManagement() {
               // Optionally refresh the users list
               loadUsers();
             }} />
-            <Button className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl">
-              <Search className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-            <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl">
-              <Edit className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
           </div>
           <div className="text-white/60 text-sm">
             Manage user accounts and permissions
@@ -646,9 +599,10 @@ export function UserManagement() {
       {sendAssetDialog.user && (
         <SendAssetDialog
           publicKey={sendAssetDialog.user.public_key}
+          username={sendAssetDialog.user.username}
           isOpen={sendAssetDialog.isOpen}
           onClose={handleCloseSendAssetDialog}
-          onSubmit={handleSendAssetSubmit}
+          onSuccess={handleSendAssetSuccess}
         />
       )}
     </div>
