@@ -478,6 +478,38 @@ class FelixApiService {
     }
   }
 
+  async fundWallet(publicKey: string) {
+    const url = `${this.baseURL}/api/users/fund-wallet`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ publicKey }),
+    }
+    
+    console.log('Fund Wallet API Request URL:', url)
+    console.log('Fund Wallet API Request Body:', JSON.stringify({ publicKey }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Fund wallet API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fund wallet: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Fund Wallet API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error funding wallet:', error)
+      throw error
+    }
+  }
+
   async createUser(userData: {
     username: string
     email: string

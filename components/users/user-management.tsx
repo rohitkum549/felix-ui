@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building, Wallet, Shield, Coins } from "lucide-react"
+import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building, Wallet, Shield, Coins, Loader2 } from "lucide-react"
 import { AddUserDialog } from "./AddUserDialog"
 import { felixApi } from "@/lib/api-service"
 import { useToast } from "@/hooks/use-toast"
@@ -86,6 +86,7 @@ export function UserManagement() {
   const [selectedRole, setSelectedRole] = useState("All")
   const [selectedGroup, setSelectedGroup] = useState("DevOps")
   const [loading, setLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
   const { toast } = useToast()
 
   const roles = ["All", "Admin", "Moderator", "User"]
@@ -113,21 +114,51 @@ export function UserManagement() {
   }
 
   const handleConnectWallet = async (user: User) => {
+    if (actionLoading === user.id) return // Prevent multiple simultaneous requests
+    
+    setActionLoading(user.id)
+    
     try {
-      // Add your wallet connection logic here
-      console.log('Connecting wallet for user:', user.id)
+      console.log('Funding wallet for user:', user.id, 'with public key:', user.public_key)
+      
+      // Show loading toast
       toast({
-        title: "Wallet Connection",
-        description: `Connecting wallet for ${user.username}...`,
+        title: "Wallet Funding",
+        description: `Funding wallet for ${user.username}...`,
       })
-      // You would call your wallet connection API here
+      
+      // Call the API to fund the wallet
+      const response = await felixApi.fundWallet(user.public_key)
+      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: `Wallet funded successfully for ${user.username}`,
+        variant: "default",
+      })
+      
+      // Update the user's wallet status locally
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === user.id 
+            ? { ...u, is_wallet_funded: true }
+            : u
+        )
+      )
+      
+      console.log('Wallet funded successfully:', response)
+      
     } catch (error: any) {
-      console.error('Error connecting wallet:', error)
+      console.error('Error funding wallet:', error)
+      
+      // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to connect wallet",
+        description: error.message || "Failed to fund wallet. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      setActionLoading(null)
     }
   }
 
@@ -450,15 +481,22 @@ export function UserManagement() {
                         {/* Dynamic wallet action */}
                         {(() => {
                           const nextAction = getNextAction(user)
+                          const isLoading = actionLoading === user.id
+                          
                           if (nextAction) {
                             const IconComponent = nextAction.icon
                             return (
                               <DropdownMenuItem 
-                                className={`${nextAction.color} hover:bg-white/10 cursor-pointer`}
-                                onClick={nextAction.action}
+                                className={`${nextAction.color} hover:bg-white/10 cursor-pointer ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={isLoading ? undefined : nextAction.action}
+                                disabled={isLoading}
                               >
-                                <IconComponent className="h-4 w-4 mr-2" />
-                                {nextAction.label}
+                                {isLoading ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <IconComponent className="h-4 w-4 mr-2" />
+                                )}
+                                {isLoading ? 'Processing...' : nextAction.label}
                               </DropdownMenuItem>
                             )
                           }
