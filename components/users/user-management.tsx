@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building, Wallet, Shield, Coins, Loader2 } from "lucide-react"
 import { AddUserDialog } from "./AddUserDialog"
+import { SendAssetDialog } from "./SendAssetDialog"
 import { felixApi } from "@/lib/api-service"
 import { useToast } from "@/hooks/use-toast"
 
@@ -87,6 +88,10 @@ export function UserManagement() {
   const [selectedGroup, setSelectedGroup] = useState("DevOps")
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [sendAssetDialog, setSendAssetDialog] = useState<{ isOpen: boolean; user: User | null }>({
+    isOpen: false,
+    user: null,
+  })
   const { toast } = useToast()
 
   const roles = ["All", "Admin", "Moderator", "User"]
@@ -218,25 +223,69 @@ export function UserManagement() {
     }
   }
 
-  const handleSendAsset = async (user: User) => {
+  const handleSendAsset = (user: User) => {
+    console.log('Opening send asset dialog for user:', user.id)
+    setSendAssetDialog({ isOpen: true, user })
+  }
+
+  const handleSendAssetSubmit = async (assetCode: string) => {
+    if (!sendAssetDialog.user) return
+    
+    const user = sendAssetDialog.user
+    setActionLoading(user.id)
+    
     try {
-      // Add your asset sending logic here
-      console.log('Sending asset to user:', user.id)
+      console.log('Sending asset to user:', user.id, 'with asset code:', assetCode)
+      
+      // Show loading toast
       toast({
         title: "Asset Transfer",
-        description: `Sending asset to ${user.username}...`,
+        description: `Sending ${assetCode} to ${user.username}...`,
         duration: 5000, // 5 seconds
       })
-      // You would call your asset sending API here
+      
+      // Here you would call your asset sending API
+      // const response = await felixApi.sendAsset(user.public_key, assetCode)
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: `${assetCode} sent successfully to ${user.username}`,
+        variant: "default",
+        duration: 5000, // 5 seconds
+      })
+      
+      // Update the user's asset status locally
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === user.id 
+            ? { ...u, is_bd_received: true }
+            : u
+        )
+      )
+      
+      console.log('Asset sent successfully')
+      
     } catch (error: any) {
       console.error('Error sending asset:', error)
+      
+      // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to send asset",
+        description: error.message || "Failed to send asset. Please try again.",
         variant: "destructive",
         duration: 5000, // 5 seconds
       })
+    } finally {
+      setActionLoading(null)
     }
+  }
+
+  const handleCloseSendAssetDialog = () => {
+    setSendAssetDialog({ isOpen: false, user: null })
   }
 
   const getNextAction = (user: User) => {
@@ -592,6 +641,16 @@ export function UserManagement() {
           )}
         </div>
       </GlassCard>
+      
+      {/* Send Asset Dialog */}
+      {sendAssetDialog.user && (
+        <SendAssetDialog
+          publicKey={sendAssetDialog.user.public_key}
+          isOpen={sendAssetDialog.isOpen}
+          onClose={handleCloseSendAssetDialog}
+          onSubmit={handleSendAssetSubmit}
+        />
+      )}
     </div>
   )
 }
