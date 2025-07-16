@@ -95,7 +95,7 @@ export function UserManagement() {
   const { toast } = useToast()
 
   const roles = ["All", "Admin", "Moderator", "User"]
-  const groups = ["DevOps", "QA", "HR"]
+  const groups = ["DevOps", "QA", "HR", "Managers"]
 
   useEffect(() => {
     loadUsers()
