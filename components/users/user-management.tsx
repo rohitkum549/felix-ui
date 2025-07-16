@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building } from "lucide-react"
 import { AddUserDialog } from "./AddUserDialog"
+import { felixApi } from "@/lib/api-service"
+import { useToast } from "@/hooks/use-toast"
 
 interface User {
   id: string
@@ -17,8 +19,8 @@ interface User {
   role: string
   public_key: string
   secret_key: string
-  entity_belongs: string
-  entity_admin_name: string
+  entity_belongs_to: string
+  entity_manager: string
   created_at: string | null
   updated_at: string | null
   status?: "active" | "inactive" | "pending"
@@ -32,8 +34,8 @@ const mockUsers: User[] = [
     role: "Admin",
     public_key: "GAYSV4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRX",
-    entity_belongs: "Managers",
-    entity_admin_name: "Rohit Jha",
+    entity_belongs_to: "Managers",
+    entity_manager: "Rohit Jha",
     created_at: "2024-01-15",
     updated_at: "2024-07-15",
     status: "active",
@@ -45,8 +47,8 @@ const mockUsers: User[] = [
     role: "User",
     public_key: "GAYSY4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRY",
-    entity_belongs: "Developers",
-    entity_admin_name: "Sarah Johnson",
+    entity_belongs_to: "Developers",
+    entity_manager: "Sarah Johnson",
     created_at: "2024-02-20",
     updated_at: "2024-07-10",
     status: "active",
@@ -58,8 +60,8 @@ const mockUsers: User[] = [
     role: "Moderator",
     public_key: "GAYSZ4BKRFCSNQRXH3ZZZP4UIITYV3GHKBIUF4ZJB7CQCAD4NUGMX4RK",
     secret_key: "SCLCQUPTQA35H2G5GV2DOIWVLSMWQ3LQYAGUCU7OOENLCOIRQQTL3WRZ",
-    entity_belongs: "Support",
-    entity_admin_name: "Mike Wilson",
+    entity_belongs_to: "Support",
+    entity_manager: "Mike Wilson",
     created_at: "2024-01-10",
     updated_at: "2024-07-05",
     status: "inactive",
@@ -67,24 +69,32 @@ const mockUsers: User[] = [
 ]
 
 export function UserManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedRole, setSelectedRole] = useState("All")
+  const [selectedGroup, setSelectedGroup] = useState("DevOps")
   const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
 
   const roles = ["All", "Admin", "Moderator", "User"]
+  const groups = ["DevOps", "QA", "HR"]
 
   useEffect(() => {
     loadUsers()
-  }, [])
+  }, [selectedGroup])
 
   const loadUsers = async () => {
     setLoading(true)
     try {
-      // const data = await apiService.getUsers()
-      // setUsers(data)
-    } catch (error) {
+      const data = await felixApi.getUsersByGroup(selectedGroup)
+      setUsers(data.users || data || [])
+    } catch (error: any) {
       console.error("Failed to load users:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load users. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -94,7 +104,7 @@ export function UserManagement() {
     const matchesSearch =
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.entity_belongs.toLowerCase().includes(searchTerm.toLowerCase())
+      user.entity_belongs_to.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = selectedRole === "All" || user.role === selectedRole
     return matchesSearch && matchesRole
   })
@@ -200,21 +210,45 @@ export function UserManagement() {
             />
           </div>
 
-          <div className="flex space-x-2">
-            {roles.map((role) => (
-              <Button
-                key={role}
-                variant={selectedRole === role ? "default" : "ghost"}
-                onClick={() => setSelectedRole(role)}
-                className={`rounded-xl ${
-                  selectedRole === role
-                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-                    : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                {role}
-              </Button>
-            ))}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Group Filter */}
+            <div className="flex space-x-2">
+              <span className="text-white/60 text-sm font-medium self-center mr-2">Group:</span>
+              {groups.map((group) => (
+                <Button
+                  key={group}
+                  variant={selectedGroup === group ? "default" : "ghost"}
+                  onClick={() => setSelectedGroup(group)}
+                  disabled={loading}
+                  className={`rounded-xl ${
+                    selectedGroup === group
+                      ? "bg-gradient-to-r from-green-500 to-teal-500 text-white"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {group}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Role Filter */}
+            <div className="flex space-x-2">
+              <span className="text-white/60 text-sm font-medium self-center mr-2">Role:</span>
+              {roles.map((role) => (
+                <Button
+                  key={role}
+                  variant={selectedRole === role ? "default" : "ghost"}
+                  onClick={() => setSelectedRole(role)}
+                  className={`rounded-xl ${
+                    selectedRole === role
+                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  {role}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </GlassCard>
@@ -222,9 +256,17 @@ export function UserManagement() {
       {/* Users Table */}
       <GlassCard variant="ultra" className="overflow-hidden">
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/10 hover:bg-white/5">
+          {loading && (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              <span className="ml-2 text-white/60">Loading users...</span>
+            </div>
+          )}
+          
+          {!loading && (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/10 hover:bg-white/5">
                 <TableHead className="text-white/80 font-semibold">User</TableHead>
                 <TableHead className="text-white/80 font-semibold">Contact</TableHead>
                 <TableHead className="text-white/80 font-semibold">Role</TableHead>
@@ -262,7 +304,7 @@ export function UserManagement() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Building className="h-3 w-3 text-white/60" />
-                        <span className="text-white/60 text-sm">{user.entity_admin_name}</span>
+                        <span className="text-white/60 text-sm">{user.entity_manager}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -273,7 +315,7 @@ export function UserManagement() {
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <Building className="h-3 w-3 text-white/60" />
-                        <span className="text-white text-sm">{user.entity_belongs}</span>
+                        <span className="text-white text-sm">{user.entity_belongs_to}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -324,8 +366,19 @@ export function UserManagement() {
                   </TableCell>
                 </TableRow>
               ))}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          )}
+          
+          {!loading && filteredUsers.length === 0 && (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <UserX className="h-12 w-12 text-white/40 mx-auto mb-4" />
+                <p className="text-white/60">No users found for the selected group.</p>
+                <p className="text-white/40 text-sm mt-2">Try selecting a different group or adding a new user.</p>
+              </div>
+            </div>
+          )}
         </div>
       </GlassCard>
     </div>

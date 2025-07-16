@@ -417,6 +417,67 @@ class FelixApiService {
   }
   
 // User Management APIs
+  async getAllUsers() {
+    const url = `${this.baseURL}/api/users`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    console.log('Get All Users API Request URL:', url)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Get all users API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fetch users: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Get All Users API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error fetching all users:', error)
+      throw error
+    }
+  }
+
+  async getUsersByGroup(groupId: string) {
+    const url = `${this.baseURL}/api/users/group?groupId=${groupId}`
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+    }
+    
+    console.log('Get Users By Group API Request URL:', url)
+    console.log('Get Users By Group API Request GroupId:', groupId)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Get users by group API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fetch users: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Get Users By Group API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error fetching users by group:', error)
+      throw error
+    }
+  }
+
   async createUser(userData: {
     username: string
     email: string
