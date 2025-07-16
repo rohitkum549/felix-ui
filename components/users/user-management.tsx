@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building } from "lucide-react"
+import { AddUserDialog } from "./AddUserDialog"
 
 interface User {
   id: string
@@ -164,10 +165,13 @@ export function UserManagement() {
       <GlassCard variant="premium" className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl">
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
+            <AddUserDialog onUserAdded={(userData) => {
+              // Handle the new user data here
+              console.log('New user added:', userData);
+              // You can add the user to your state or refetch users
+              // Optionally refresh the users list
+              loadUsers();
+            }} />
             <Button className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl">
               <Search className="h-4 w-4 mr-2" />
               Export Data

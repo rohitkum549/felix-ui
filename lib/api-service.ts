@@ -416,6 +416,46 @@ class FelixApiService {
     })
   }
   
+// User Management APIs
+  async createUser(userData: {
+    username: string
+    email: string
+    role: string
+    password: string
+    entity_belongs_to: string
+    entity_manager: string
+  }) {
+    const url = `${this.baseURL}/api/users/create`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify(userData),
+    }
+    
+    console.log('Create User API Request URL:', url)
+    console.log('Create User API Request Body:', JSON.stringify(userData, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Create user API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to create user: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Create User API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error creating user:', error)
+      throw error
+    }
+  }
+
 // User Profile APIs
   async fetchUserProfile(email: string, retryCount = 0, maxRetries = 3) {
     // Use API base URL from environment for profile
