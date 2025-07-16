@@ -372,6 +372,38 @@ class FelixApiService {
     })
   }
 
+  async sendMoney(sendRequest: { senderSecret: string; receiverPublic: string; amount: string }) {
+    const url = `${this.baseURL}/api/wallets/BdPayment`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify(sendRequest),
+    }
+    
+    console.log('Send Money API Request URL:', url)
+    console.log('Send Money API Request Body:', JSON.stringify(sendRequest, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Send money API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to send money: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Send Money API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error sending money:', error)
+      throw error
+    }
+  }
+
 // Settings APIs
   async getBlockchainSettings() {
     return this.request("/settings/blockchain")
