@@ -107,6 +107,7 @@ export function UserManagement() {
         title: "Error",
         description: error.message || "Failed to load users. Please try again.",
         variant: "destructive",
+        duration: 5000, // 5 seconds
       })
     } finally {
       setLoading(false)
@@ -125,6 +126,7 @@ export function UserManagement() {
       toast({
         title: "Wallet Funding",
         description: `Funding wallet for ${user.username}...`,
+        duration: 5000, // 5 seconds
       })
       
       // Call the API to fund the wallet
@@ -135,6 +137,7 @@ export function UserManagement() {
         title: "Success!",
         description: `Wallet funded successfully for ${user.username}`,
         variant: "default",
+        duration: 5000, // 5 seconds
       })
       
       // Update the user's wallet status locally
@@ -156,6 +159,7 @@ export function UserManagement() {
         title: "Error",
         description: error.message || "Failed to fund wallet. Please try again.",
         variant: "destructive",
+        duration: 5000, // 5 seconds
       })
     } finally {
       setActionLoading(null)
@@ -163,21 +167,54 @@ export function UserManagement() {
   }
 
   const handleAddTrustline = async (user: User) => {
+    if (actionLoading === user.id) return // Prevent multiple simultaneous requests
+    
+    setActionLoading(user.id)
+    
     try {
-      // Add your trustline addition logic here
-      console.log('Adding trustline for user:', user.id)
+      console.log('Adding trustline for user:', user.id, 'with secret key:', user.secret_key.substring(0, 10) + '...')
+      
+      // Show loading toast
       toast({
         title: "Trustline Addition",
         description: `Adding trustline for ${user.username}...`,
+        duration: 5000, // 5 seconds
       })
-      // You would call your trustline addition API here
+      
+      // Call the API to add trustline
+      const response = await felixApi.addTrustline(user.secret_key)
+      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: `Trustline added successfully for ${user.username}`,
+        variant: "default",
+        duration: 5000, // 5 seconds
+      })
+      
+      // Update the user's trustline status locally
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === user.id 
+            ? { ...u, is_trustline_added: true }
+            : u
+        )
+      )
+      
+      console.log('Trustline added successfully:', response)
+      
     } catch (error: any) {
       console.error('Error adding trustline:', error)
+      
+      // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to add trustline",
+        description: error.message || "Failed to add trustline. Please try again.",
         variant: "destructive",
+        duration: 5000, // 5 seconds
       })
+    } finally {
+      setActionLoading(null)
     }
   }
 
@@ -188,6 +225,7 @@ export function UserManagement() {
       toast({
         title: "Asset Transfer",
         description: `Sending asset to ${user.username}...`,
+        duration: 5000, // 5 seconds
       })
       // You would call your asset sending API here
     } catch (error: any) {
@@ -196,6 +234,7 @@ export function UserManagement() {
         title: "Error",
         description: error.message || "Failed to send asset",
         variant: "destructive",
+        duration: 5000, // 5 seconds
       })
     }
   }

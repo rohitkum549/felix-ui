@@ -510,6 +510,38 @@ class FelixApiService {
     }
   }
 
+  async addTrustline(secretKey: string) {
+    const url = `${this.baseURL}/api/users/add-trustline`
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      },
+      body: JSON.stringify({ secretKey }),
+    }
+    
+    console.log('Add Trustline API Request URL:', url)
+    console.log('Add Trustline API Request Body:', JSON.stringify({ secretKey: '[REDACTED]' }, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Add trustline API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to add trustline: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Add Trustline API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error adding trustline:', error)
+      throw error
+    }
+  }
+
   async createUser(userData: {
     username: string
     email: string
