@@ -5,7 +5,7 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Star, Heart, ShoppingCart, Eye, Download, TrendingUp, ChevronLeft, ChevronRight, List, Bell } from "lucide-react"
+import { Search, Filter, Star, Heart, ShoppingCart, Eye, Download, ChevronLeft, ChevronRight, List, Bell } from "lucide-react"
 import { useMarketplace } from "@/hooks/use-marketplace"
 import { Service } from "@/lib/marketplace-service"
 import { useProfile } from "@/hooks/use-profile"
@@ -26,7 +26,6 @@ interface MarketplaceItem {
   downloads: number
   category: string
   image: string
-  featured: boolean
   tags: string[]
   sender_id: string
 }
@@ -43,7 +42,6 @@ const mapServiceToMarketplaceItem = (service: Service): MarketplaceItem => {
     downloads: Math.floor(Math.random() * 5000) + 1000, // Mock data
     category: service.currency || 'BD',
     image: '/placeholder.svg?height=200&width=300',
-    featured: Math.random() > 0.5, // Randomly set some as featured
     tags: [service.status || 'pending', service.currency || 'BD'],
     sender_id: service.sender_id
   }
@@ -60,7 +58,6 @@ const mockItems: MarketplaceItem[] = [
     downloads: 2847,
     category: "Templates",
     image: "/placeholder.svg?height=200&width=300",
-    featured: true,
     tags: ["React", "TypeScript", "Tailwind"],
     sender_id: "mock-sender-id-1",
   },
@@ -74,7 +71,6 @@ const mockItems: MarketplaceItem[] = [
     downloads: 1523,
     category: "Components",
     image: "/placeholder.svg?height=200&width=300",
-    featured: false,
     tags: ["Components", "Design System"],
     sender_id: "mock-sender-id-2",
   },
@@ -88,7 +84,6 @@ const mockItems: MarketplaceItem[] = [
     downloads: 3241,
     category: "Analytics",
     image: "/placeholder.svg?height=200&width=300",
-    featured: true,
     tags: ["Analytics", "Charts", "Data"],
     sender_id: "mock-sender-id-3",
   },
@@ -266,96 +261,6 @@ export function Marketplace() {
         </div>
       )}
 
-      {/* Featured Items - Only show for all services */}
-      {activeTab === "all" && (
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-            <TrendingUp className="h-6 w-6 mr-2 text-yellow-400" />
-            Featured Products
-          </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {filteredItems
-            .filter((item) => item.featured)
-            .map((item) => (
-              <GlassCard key={item.id} variant="ultra" className="group overflow-hidden">
-                <div className="relative">
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4 flex space-x-2">
-                    <Badge className="bg-yellow-500/90 text-black font-semibold">Featured</Badge>
-                    {profile?.public_key === item.sender_id && (
-                      <Badge className="bg-emerald-600 text-white font-semibold">Your Service</Badge>
-                    )}
-                  </div>
-                  <div className="absolute top-4 right-4 flex space-x-2">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="bg-black/50 hover:bg-black/70 text-white rounded-full"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="bg-black/50 hover:bg-black/70 text-white rounded-full"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-lg font-bold text-white mb-1">{item.title}</h3>
-                      <p className="text-white/60 text-sm">{item.description}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-white">B$ {item.price}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-white font-medium">{item.rating}</span>
-                      <span className="text-white/60 text-sm">({item.reviews})</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-white/60 text-sm">
-                      <Download className="h-4 w-4" />
-                      <span>{item.downloads.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {item.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="bg-white/10 text-white/80 hover:bg-white/20">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <Button 
-                    className={`w-full ${profile?.public_key === item.sender_id 
-                      ? 'bg-gray-600/50 hover:bg-gray-600/70 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 cursor-pointer'} text-white rounded-xl relative z-10`}
-                    onClick={() => profile?.public_key !== item.sender_id ? handleBuyNow(item.id, profile?.secret_key) : undefined}
-                    disabled={profile?.public_key === item.sender_id}
-                    title={profile?.public_key === item.sender_id ? "You cannot buy your own service" : ""}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    {profile?.public_key === item.sender_id ? "Owned" : "Buy Now"}
-                  </Button>
-                </div>
-              </GlassCard>
-            ))}
-        </div>
-      </div>
-      )}
 
       {/* All Products */}
       <div>
