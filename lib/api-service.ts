@@ -34,6 +34,10 @@ class FelixApiService {
     return this.request("/dashboard/blockchain-stats")
   }
 
+  async getTransactionsAndWallets() {
+    return this.request("/api/transactions-and-wallets")
+  }
+
   async getBlueDollarBalance() {
     return this.request("/wallet/bluedollar-balance")
   }
