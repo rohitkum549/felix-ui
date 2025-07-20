@@ -9,6 +9,8 @@ import { useProfile } from "@/hooks/use-profile"
 import { useDashboard } from "@/hooks/use-dashboard"
 import { TransactionCard } from "./transaction-card"
 import { ServiceCard } from "./service-card"
+import { ActivityGraph } from "./activity-graph"
+import { BlockchainActivity } from "./blockchain-activity"
 import { formatDistanceToNow } from 'date-fns'
 
 interface StatCard {
@@ -296,21 +298,18 @@ useEffect(() => {
             </Button>
           </div>
 
-          {/* Enhanced Chart Visualization */}
-          <div className="h-80 flex items-end justify-between space-x-3 mb-6">
-            {[65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88, 92].map((height, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center space-y-2 group">
-                <div
-                  className="w-full bg-gradient-to-t from-blue-500/60 via-purple-500/60 to-cyan-500/60 rounded-t-2xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:from-blue-400/80 hover:via-purple-400/80 hover:to-cyan-400/80 relative overflow-hidden group-hover:scale-105"
-                  style={{ height: `${height}%` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          {/* Dynamic Chart Visualization */}
+          <div className="mb-6">
+            {dashboardData ? (
+              <ActivityGraph transactions={dashboardData.transactions.data} />
+            ) : (
+              <div className="h-80 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                  <p className="text-white/60">Loading chart data...</p>
                 </div>
-                <span className="text-white/50 text-xs font-medium">
-                  {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][index]}
-                </span>
               </div>
-            ))}
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-6">
@@ -450,89 +449,28 @@ useEffect(() => {
       ) : null}
 
       {/* Recent Blockchain Activity */}
-      <GlassCard variant="blockchain" className="p-8" glow={true}>
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl font-bold text-white">Recent Blockchain Activity</h3>
-          <Button
-            variant="ghost"
-            className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-xl transition-all duration-300"
-          >
-            View Blockchain Explorer
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          {[
-            {
-              action: "Multi-sig wallet created",
-              entity: "AI Development CoE",
-              time: "2 minutes ago",
-              type: "security",
-              hash: "0x1a2b3c...",
-            },
-            {
-              action: "BlueDollar transfer completed",
-              entity: "B$ 5,000 → Project Alpha",
-              time: "5 minutes ago",
-              type: "transfer",
-              hash: "0x4d5e6f...",
-            },
-            {
-              action: "Service purchase executed",
-              entity: "Blockchain Integration",
-              time: "12 minutes ago",
-              type: "purchase",
-              hash: "0x7g8h9i...",
-            },
-            {
-              action: "Asset portfolio updated",
-              entity: "Data Analytics Suite",
-              time: "1 hour ago",
-              type: "asset",
-              hash: "0xj1k2l3...",
-            },
-          ].map((activity, index) => (
-            <div
-              key={index}
-              className="flex items-center space-x-6 p-6 rounded-2xl bg-white/5 hover:bg-white/10 transition-all duration-300 group"
+      {dashboardData ? (
+        <GlassCard variant="blockchain" className="p-8" glow={true}>
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-2xl font-bold text-white">Recent Blockchain Activity</h3>
+            <Button
+              variant="ghost"
+              className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-xl transition-all duration-300"
+              onClick={() => refetch()}
+              disabled={dashboardLoading}
             >
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 ${
-                  activity.type === "security"
-                    ? "bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-blue-400 border border-blue-400/30"
-                    : activity.type === "transfer"
-                      ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20 text-green-400 border border-green-400/30"
-                      : activity.type === "purchase"
-                        ? "bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-purple-400 border border-purple-400/30"
-                        : "bg-gradient-to-br from-orange-500/20 to-red-500/20 text-orange-400 border border-orange-400/30"
-                }`}
-              >
-                {activity.type === "security" ? (
-                  <Shield className="h-6 w-6" />
-                ) : activity.type === "transfer" ? (
-                  <ArrowUpRight className="h-6 w-6" />
-                ) : activity.type === "purchase" ? (
-                  <ShoppingCart className="h-6 w-6" />
-                ) : (
-                  <Blocks className="h-6 w-6" />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-semibold text-lg">{activity.action}</p>
-                <p className="text-white/70 text-sm mt-1">{activity.entity}</p>
-                <p className="text-white/50 text-xs mt-1 font-mono">Hash: {activity.hash}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-white/50 text-sm">{activity.time}</p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-green-400 text-xs font-semibold">Confirmed</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </GlassCard>
+              <RefreshCw className={`h-4 w-4 mr-2 ${dashboardLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
+
+          <BlockchainActivity 
+            transactions={dashboardData.transactions.data} 
+            services={dashboardData.services.data} 
+          />
+        </GlassCard>
+      ) : null}
+
     </div>
   )
 }
