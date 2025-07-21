@@ -23,6 +23,7 @@ class FelixApiService {
     return this.token || undefined
   }
 
+  
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
     const token = this.getCurrentToken()
