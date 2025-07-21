@@ -11,6 +11,7 @@ import { UserManagement } from "@/components/users/user-management"
 import { Wallet } from "@/components/wallet/wallet"
 import { Transactions } from "@/components/transactions/transactions"
 import { Settings } from "@/components/settings/settings"
+import Contacts from "@/pages/contacts"
 import { useAuth } from "@/contexts/auth-context"
 
 const pageComponents = {
@@ -22,6 +23,7 @@ const pageComponents = {
   "/transactions": Transactions,
   "/assets": Dashboard, // Placeholder for Asset Portfolio
   "/multisig": Dashboard, // Placeholder for Multi-Signature
+  "/contacts": Contacts,
   "/settings": Settings,
 }
 
@@ -29,11 +31,12 @@ const pageTitles = {
   "/dashboard": "Felix Dashboard",
   "/marketplace": "Service Marketplace",
   "/users": "Member Management",
-  "/user-management": "User Management",
+  "/user-management": "Management",
   "/wallet": "BlueDollar Wallet",
   "/transactions": "Blockchain Transactions",
   "/assets": "Asset Portfolio",
   "/multisig": "Multi-Signature",
+  "/contacts": "Contacts",
   "/settings": "Platform Settings",
 }
 

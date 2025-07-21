@@ -61,9 +61,26 @@ public async fetchProfile(email: string): Promise<ProfileData> {
    */
   private saveProfileToSession(profileData: ProfileData): void {
     try {
-      sessionStorage.setItem('felix_profile_data', JSON.stringify(profileData));
+      console.log('🔄 Attempting to save profile to session storage:', {
+        email: profileData.email,
+        username: profileData.username,
+        hasSessionStorage: typeof sessionStorage !== 'undefined'
+      });
+      
+      const dataString = JSON.stringify(profileData);
+      sessionStorage.setItem('felix_profile_data', dataString);
+      
+      // Verify the data was saved
+      const savedData = sessionStorage.getItem('felix_profile_data');
+      if (savedData) {
+        console.log('✅ Profile successfully saved to session storage');
+      } else {
+        console.error('❌ Profile was not saved to session storage');
+      }
     } catch (error) {
-      console.error('Error saving profile to session storage:', error);
+      console.error('❌ Error saving profile to session storage:', error);
+      console.error('SessionStorage available:', typeof sessionStorage !== 'undefined');
+      console.error('Profile data:', profileData);
     }
   }
 

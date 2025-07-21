@@ -29,6 +29,7 @@ import {
   Shield,
   LogOut,
   UserCog,
+  Contact,
 } from "lucide-react"
 
 interface NavItem {
@@ -56,6 +57,7 @@ const navItems: NavItem[] = [
     description: "Team & Access Control",
     requiredRoles: ["coe-admin", "project-admin"],
   },
+  { icon: Contact, label: "Contacts", path: "/contacts", description: "QR Codes & Asset Transfers" },
   { icon: Wallet, label: "BlueDollar Wallet", path: "/wallet", description: "Digital Currency Management" },
   { icon: CreditCard, label: "Transactions", path: "/transactions", description: "Blockchain History" },
   {
@@ -68,9 +70,9 @@ const navItems: NavItem[] = [
   },
   {
     icon: UserCog,
-    label: "User Management",
+    label: "Management",
     path: "/user-management",
-    description: "Admin User Control",
+    description: "User, Entity & Asset Control",
     requiredRoles: ["Admin"],
   },
   { icon: Settings, label: "Platform Settings", path: "/settings", description: "Configuration" },
