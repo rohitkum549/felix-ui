@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useProfile } from "@/hooks/use-profile"
+import { felixApi } from "@/lib/api-service"
 import { UserPlus, Loader2 } from "lucide-react"
 
 export function RequestServiceDialog({ onServiceRequested }: { onServiceRequested: () => void }) {
@@ -61,8 +62,7 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
     setIsSubmitting(true)
     
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
-      const requestBody = {
+      const requestData = {
         clientKey: profile.public_key,
         description: formData.description,
         budget: formData.budget,
@@ -70,26 +70,9 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
         requirements: formData.requirements
       };
       
-      console.log('API Base URL:', apiBaseUrl)
-      console.log('Request body:', requestBody)
+      console.log('Request data:', requestData)
       
-      const response = await fetch(`${apiBaseUrl}/api/services/request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      })
-      
-      console.log('Response status:', response.status)
-      console.log('Response headers:', response.headers)
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to request service')
-      }
-      
-      const data = await response.json()
+      const data = await felixApi.requestService(requestData)
       
       toast({
         title: "Success",

@@ -11,6 +11,8 @@ import { TransactionCard } from "./transaction-card"
 import { ServiceCard } from "./service-card"
 import { ActivityGraph } from "./activity-graph"
 import { BlockchainActivity } from "./blockchain-activity"
+import { ServiceDistributionChart } from "./service-distribution-chart"
+import { UserActivityHeatmap } from "./user-activity-heatmap"
 import { formatDistanceToNow } from 'date-fns'
 
 interface StatCard {
@@ -387,6 +389,51 @@ useEffect(() => {
               </div>
             ))}
           </div>
+        </GlassCard>
+      </div>
+
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Service Distribution Analytics */}
+        <GlassCard variant="premium" className="p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">Service Distribution</h3>
+              <p className="text-white/60">Visual breakdown of services by category</p>
+            </div>
+          </div>
+
+          {dashboardData && dashboardData.services.data.length > 0 ? (
+            <ServiceDistributionChart services={dashboardData.services.data} />
+          ) : (
+            <div className="h-80 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto mb-4"></div>
+                <p className="text-white/60">Loading chart data...</p>
+              </div>
+            </div>
+          )}
+        </GlassCard>
+
+        {/* User Activity Heatmap */}
+        <GlassCard variant="blockchain" className="p-8" glow={true}>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">Activity Heatmap</h3>
+              <p className="text-white/60">12-week transaction activity pattern</p>
+            </div>
+          </div>
+
+          {dashboardData && dashboardData.transactions.data.length > 0 ? (
+            <UserActivityHeatmap transactions={dashboardData.transactions.data} />
+          ) : (
+            <div className="h-40 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                <p className="text-white/60">Loading heatmap...</p>
+              </div>
+            </div>
+          )}
         </GlassCard>
       </div>
 

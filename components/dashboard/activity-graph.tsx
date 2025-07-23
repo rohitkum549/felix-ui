@@ -15,6 +15,7 @@ interface DayData {
   day: string
 }
 
+
 export function ActivityGraph({ transactions }: ActivityGraphProps) {
   const chartData = useMemo(() => {
     if (!transactions.length) return []

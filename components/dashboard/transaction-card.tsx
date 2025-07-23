@@ -23,7 +23,15 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
     })
   }
 
-  const isOutgoing = transaction.sender_id === transaction.receiver_id // This would need proper logic based on current user
+  // Determine if transaction amount is positive or negative
+  const transactionAmount = parseFloat(transaction.amount.toString())
+  const isNegative = transactionAmount < 0
+  const isPositive = transactionAmount > 0
+  
+  // Set colors based on positive/negative values
+  const amountColor = isNegative ? "text-red-400" : isPositive ? "text-green-400" : "text-white"
+  const iconBgColor = isNegative ? "bg-red-500/20 text-red-400" : isPositive ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
+  
   const statusColor = transaction.status === "completed" ? "bg-green-500/20 text-green-400 border-green-400/30" : 
                      transaction.status === "pending" ? "bg-yellow-500/20 text-yellow-400 border-yellow-400/30" :
                      "bg-red-500/20 text-red-400 border-red-400/30"
@@ -32,14 +40,12 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
     <GlassCard variant="premium" className="p-6 hover:bg-white/10 transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            isOutgoing ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"
-          }`}>
-            {isOutgoing ? <ArrowUpRight className="h-6 w-6" /> : <ArrowDownRight className="h-6 w-6" />}
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${iconBgColor}`}>
+            {isNegative ? <ArrowUpRight className="h-6 w-6" /> : <ArrowDownRight className="h-6 w-6" />}
           </div>
           <div>
             <p className="text-white font-semibold">
-              {isOutgoing ? "Sent" : "Received"} {transaction.currency}
+              {isNegative ? "Sent" : "Received"} {transaction.currency}
             </p>
             <p className="text-white/60 text-sm">
               {formatDistanceToNow(new Date(transaction.created_at), { addSuffix: true })}
@@ -47,8 +53,8 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-white font-bold text-lg">
-            {isOutgoing ? "-" : "+"}{transaction.amount} {transaction.currency}
+          <p className={`font-bold text-lg ${amountColor}`}>
+            {isNegative ? "" : "+"}{Math.abs(transactionAmount).toLocaleString()} {transaction.currency}
           </p>
           <Badge className={statusColor}>
             {transaction.status}

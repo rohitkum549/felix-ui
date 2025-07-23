@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import KeycloakService from "@/lib/keycloak"
 import { profileService } from "@/lib/profile-service"
+import { felixApi } from "@/lib/api-service"
 
 interface User {
   id: string
@@ -41,6 +42,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const keycloakService = KeycloakService.getInstance()
 
   useEffect(() => {
+    // Initialize API service with token provider
+    felixApi.setTokenProvider(() => keycloakService.getToken())
+    console.log('🔧 API service configured with token provider')
+    
     initializeAuth()
   }, [])
 

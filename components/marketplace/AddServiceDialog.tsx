@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useProfile } from "@/hooks/use-profile"
+import { felixApi } from "@/lib/api-service"
 import { PlusCircle, Star, Loader2 } from "lucide-react"
 
 // Star rating component
@@ -88,28 +89,16 @@ export function AddServiceDialog({ onServiceAdded }: { onServiceAdded: () => voi
     setIsSubmitting(true)
     
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
-      const response = await fetch(`${apiBaseUrl}/api/memos/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          creatorKey: profile.public_key,
-          memo: formData.memo,
-          bdAmount: formData.bdAmount,
-          assetId: formData.assetId,
-          description: formData.description,
-          rating: formData.rating
-        }),
-      })
+      const serviceData = {
+        creatorKey: profile.public_key,
+        memo: formData.memo,
+        bdAmount: formData.bdAmount,
+        assetId: formData.assetId,
+        description: formData.description,
+        rating: formData.rating
+      };
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create service')
-      }
-      
-      const data = await response.json()
+      const data = await felixApi.createService(serviceData)
       
       toast({
         title: "Success",

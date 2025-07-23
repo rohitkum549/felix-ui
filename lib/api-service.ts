@@ -1,20 +1,37 @@
-// Felix Blockchain API Service Layer
+// Felix Blockchain API Service Layer with Enhanced Token Management
 class FelixApiService {
   private baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
   private stellarEndpoint = process.env.NEXT_PUBLIC_STELLAR_ENDPOINT || 'https://horizon.stellar.org'
   private token: string | null = null
+  private getTokenCallback: (() => string | undefined) | null = null
+
+  // Set the callback to get the current token from auth context
+  setTokenProvider(getTokenCallback: () => string | undefined) {
+    this.getTokenCallback = getTokenCallback
+  }
 
   setAuthToken(token: string) {
     this.token = token
   }
 
+  // Get the current access token
+  private getCurrentToken(): string | undefined {
+    // Priority: callback (from auth context) > manually set token
+    if (this.getTokenCallback) {
+      return this.getTokenCallback()
+    }
+    return this.token || undefined
+  }
+
+  
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
         "X-Felix-Version": "1.0",
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -67,6 +84,40 @@ class FelixApiService {
     })
   }
 
+  // Create Service API
+  async createService(serviceData: {
+    creatorKey: string
+    memo: string
+    bdAmount: number
+    assetId: string
+    description: string
+    rating: number
+  }) {
+    return this.request("/api/memos/create", {
+      method: "POST",
+      body: JSON.stringify(serviceData),
+    })
+  }
+
+  // Request Service API
+  async requestService(requestData: {
+    clientKey: string
+    description: string
+    budget: number
+    title: string
+    requirements: string
+  }) {
+    return this.request("/api/services/request", {
+      method: "POST",
+      body: JSON.stringify(requestData),
+    })
+  }
+
+  // Get Service Requests API
+  async getServiceRequests() {
+    return this.request("/api/services/request")
+  }
+
 // Blockchain Wallet APIs
   async getWalletBalance() {
     return this.request("/wallet/stellar-balance")
@@ -78,11 +129,12 @@ class FelixApiService {
 
   async getWalletAmounts(userSecret: string) {
     const url = `${this.baseURL}/api/wallets/amounts?userSecret=${userSecret}`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     }
     
@@ -116,11 +168,12 @@ class FelixApiService {
 
   async getAllServices(limit: number = 10, offset: number = 0) {
     const url = `${this.baseURL}/api/services/all?limit=${limit}&offset=${offset}`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     }
     
@@ -142,11 +195,12 @@ class FelixApiService {
 
   async getProposals(requestId: string) {
     const url = `${this.baseURL}/api/services/get/propose?request_id=${requestId}`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     }
     
@@ -173,11 +227,12 @@ class FelixApiService {
     bidAmount: number
   }) {
     const url = `${this.baseURL}/api/services/propose`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify(proposalData),
     }
@@ -203,11 +258,12 @@ class FelixApiService {
 
   async acceptProposal(proposalId: string) {
     const url = `${this.baseURL}/api/services/accept-proposal`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ proposalId }),
     }
@@ -233,11 +289,12 @@ class FelixApiService {
 
   async rejectProposal(proposalId: string) {
     const url = `${this.baseURL}/api/services/reject-proposal`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ proposalId }),
     }
@@ -269,11 +326,12 @@ class FelixApiService {
       throw new Error('BD Issuer not configured in environment variables')
     }
     
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ 
         proposalId, 
@@ -303,11 +361,12 @@ class FelixApiService {
 
   async deleteProposal(proposalId: string) {
     const url = `${this.baseURL}/api/services/delete-proposal`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ proposalId }),
     }
@@ -340,10 +399,12 @@ class FelixApiService {
 
   async payForMemo(memoId: string, buyerSecret: string) {
     const url = `${this.baseURL}/api/memos/pay-for-memo`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ memoId, buyerSecret }),
     }
@@ -376,13 +437,194 @@ class FelixApiService {
     })
   }
 
-  async sendMoney(sendRequest: { senderSecret: string; receiverPublic: string; amount: string }) {
-    const url = `${this.baseURL}/api/wallets/BdPayment`
+  // New Asset Management APIs
+  async createCustomAsset(assetData: {
+    assetCode: string
+    assetIssuer?: string
+    description?: string
+    metadata?: any
+  }) {
+    const url = `${this.baseURL}/api/assets`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify(assetData),
+    }
+    
+    console.log('Create Custom Asset API Request URL:', url)
+    console.log('Create Custom Asset API Request Body:', JSON.stringify(assetData, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Create custom asset API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to create asset: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Create Custom Asset API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error creating custom asset:', error)
+      throw error
+    }
+  }
+
+  async getAllAssets(filters?: {
+    status?: string
+    assetCode?: string
+    limit?: number
+    offset?: number
+  }) {
+    const queryParams = new URLSearchParams()
+    if (filters?.status) queryParams.append('status', filters.status)
+    if (filters?.assetCode) queryParams.append('assetCode', filters.assetCode)
+    if (filters?.limit) queryParams.append('limit', filters.limit.toString())
+    if (filters?.offset) queryParams.append('offset', filters.offset.toString())
+    
+    const url = `${this.baseURL}/api/assets${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+    const token = this.getCurrentToken()
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    }
+    
+    console.log('Get All Assets API Request URL:', url)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Get all assets API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fetch assets: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Get All Assets API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error fetching all assets:', error)
+      throw error
+    }
+  }
+
+  async getAssetById(assetId: string) {
+    const url = `${this.baseURL}/api/assets/${assetId}`
+    const token = this.getCurrentToken()
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    }
+    
+    console.log('Get Asset By ID API Request URL:', url)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Get asset by ID API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fetch asset: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Get Asset By ID API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error fetching asset by ID:', error)
+      throw error
+    }
+  }
+
+  async toggleAssetStatus(assetId: string) {
+    const url = `${this.baseURL}/api/assets/${assetId}/toggle-status`
+    const token = this.getCurrentToken()
+    const config: RequestInit = {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    }
+    
+    console.log('Toggle Asset Status API Request URL:', url)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Toggle asset status API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to toggle asset status: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Toggle Asset Status API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error toggling asset status:', error)
+      throw error
+    }
+  }
+
+  async issueAssetToAccount(assetId: string, issueData: {
+    destinationAccount: string
+    amount: string
+    memo?: string
+  }) {
+    const url = `${this.baseURL}/api/assets/${assetId}/issue`
+    const token = this.getCurrentToken()
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify(issueData),
+    }
+    
+    console.log('Issue Asset To Account API Request URL:', url)
+    console.log('Issue Asset To Account API Request Body:', JSON.stringify(issueData, null, 2))
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Issue asset to account API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to issue asset: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Issue Asset To Account API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error issuing asset to account:', error)
+      throw error
+    }
+  }
+
+  async sendMoney(sendRequest: { senderSecret: string; receiverPublic: string; amount: string }) {
+    const url = `${this.baseURL}/api/wallets/BdPayment`
+    const token = this.getCurrentToken()
+    const config: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify(sendRequest),
     }
@@ -423,11 +665,12 @@ class FelixApiService {
 // User Management APIs
   async getAllUsers() {
     const url = `${this.baseURL}/api/users`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     }
     
@@ -453,11 +696,12 @@ class FelixApiService {
 
   async getUsersByGroup(groupId: string) {
     const url = `${this.baseURL}/api/users/group?groupId=${groupId}`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     }
     
@@ -484,11 +728,12 @@ class FelixApiService {
 
   async fundWallet(publicKey: string) {
     const url = `${this.baseURL}/api/users/fund-wallet`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ publicKey }),
     }
@@ -516,11 +761,12 @@ class FelixApiService {
 
   async addTrustline(secretKey: string) {
     const url = `${this.baseURL}/api/users/add-trustline`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ secretKey }),
     }
@@ -548,11 +794,12 @@ class FelixApiService {
 
   async sendAsset(publicKey: string, assetCode: string) {
     const url = `${this.baseURL}/api/users/send-bd`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ publicKey, assetCode }),
     }
@@ -587,11 +834,12 @@ class FelixApiService {
     entity_manager: string
   }) {
     const url = `${this.baseURL}/api/users/create`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify(userData),
     }
@@ -621,11 +869,12 @@ class FelixApiService {
   async fetchUserProfile(email: string, retryCount = 0, maxRetries = 3) {
     // Use API base URL from environment for profile
     const url = `${this.baseURL}/api/fetch/profile`
+    const token = this.getCurrentToken()
     const config: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ email }),
     }

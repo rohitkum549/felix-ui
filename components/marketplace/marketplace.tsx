@@ -15,6 +15,7 @@ import { ProductCard } from "./ProductCard"
 import { AddServiceDialog } from "./AddServiceDialog"
 import { RequestServiceDialog } from "./RequestServiceDialog"
 import { RequestedServiceCard, RequestedService } from "./RequestedServiceCard"
+import { felixApi } from "@/lib/api-service"
 
 interface MarketplaceItem {
   id: string
@@ -122,14 +123,7 @@ export function Marketplace() {
     setRequestedError(null);
     
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
-      const response = await fetch(`${apiBaseUrl}/api/services/request`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch requested services');
-      }
-      
-      const data = await response.json();
+      const data = await felixApi.getServiceRequests();
       
       // The API returns an array of requested services directly
       const services = Array.isArray(data) ? data : [data];
