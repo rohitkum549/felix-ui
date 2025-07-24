@@ -455,25 +455,29 @@ export default function ContactsPage() {
 
       {/* Send Asset Dialog */}
       <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="bg-gray-900 border border-gray-800 text-white max-w-md rounded-lg overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-green-600" />
+            <DialogTitle className="text-lg font-bold flex items-center">
+              <Send className="h-5 w-5 mr-2" />
               Send Asset
             </DialogTitle>
+            <div className="text-gray-400 text-sm">
+              Send digital assets to another wallet
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="send-asset">Asset</Label>
+          
+          <form onSubmit={(e) => { e.preventDefault(); handleSendAsset(); }} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="send-asset" className="text-white">Asset</Label>
               <Select value={sendFormData.assetId} onValueChange={(value) => 
                 setSendFormData(prev => ({ ...prev, assetId: value }))
               }>
-                <SelectTrigger>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Select an asset" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {assets.map((asset) => (
-                    <SelectItem key={asset.id} value={asset.id}>
+                    <SelectItem key={asset.id} value={asset.id} className="text-white hover:bg-gray-700">
                       {asset.name} ({asset.symbol})
                     </SelectItem>
                   ))}
@@ -481,8 +485,8 @@ export default function ContactsPage() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="send-amount">Amount</Label>
+            <div className="space-y-2">
+              <Label htmlFor="send-amount" className="text-white">Amount</Label>
               <Input
                 id="send-amount"
                 type="number"
@@ -490,62 +494,81 @@ export default function ContactsPage() {
                 placeholder="Enter amount"
                 value={sendFormData.amount}
                 onChange={(e) => setSendFormData(prev => ({ ...prev, amount: e.target.value }))}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+                required
               />
             </div>
             
-            <div>
-              <Label htmlFor="send-reason">Reason (Optional)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="send-reason" className="text-white">Reason (Optional)</Label>
               <Textarea
                 id="send-reason"
                 placeholder="Enter reason for transfer"
                 value={sendFormData.reason}
                 onChange={(e) => setSendFormData(prev => ({ ...prev, reason: e.target.value }))}
                 rows={3}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500 resize-none"
               />
             </div>
-            
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                className="flex-1" 
-                onClick={() => setSendDialogOpen(false)}
-                disabled={sendLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="flex-1" 
-                onClick={handleSendAsset}
-                disabled={sendLoading}
-              >
-                {sendLoading ? 'Sending...' : 'Send Asset'}
-              </Button>
-            </div>
+          </form>
+          
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={() => setSendDialogOpen(false)}
+              disabled={sendLoading}
+              className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              onClick={handleSendAsset}
+              disabled={sendLoading}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+            >
+              {sendLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Asset
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Request Asset Dialog */}
       <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="bg-gray-900 border border-gray-800 text-white max-w-md rounded-lg overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <HandCoins className="h-5 w-5 text-blue-600" />
+            <DialogTitle className="text-lg font-bold flex items-center">
+              <HandCoins className="h-5 w-5 mr-2" />
               Request Asset
             </DialogTitle>
+            <div className="text-gray-400 text-sm">
+              Request digital assets from another wallet
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="request-asset">Asset</Label>
+          
+          <form onSubmit={(e) => { e.preventDefault(); handleRequestAsset(); }} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="request-asset" className="text-white">Asset</Label>
               <Select value={requestFormData.assetId} onValueChange={(value) => 
                 setRequestFormData(prev => ({ ...prev, assetId: value }))
               }>
-                <SelectTrigger>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Select an asset" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {assets.map((asset) => (
-                    <SelectItem key={asset.id} value={asset.id}>
+                    <SelectItem key={asset.id} value={asset.id} className="text-white hover:bg-gray-700">
                       {asset.name} ({asset.symbol})
                     </SelectItem>
                   ))}
@@ -553,8 +576,8 @@ export default function ContactsPage() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="request-amount">Amount</Label>
+            <div className="space-y-2">
+              <Label htmlFor="request-amount" className="text-white">Amount</Label>
               <Input
                 id="request-amount"
                 type="number"
@@ -562,37 +585,52 @@ export default function ContactsPage() {
                 placeholder="Enter amount"
                 value={requestFormData.amount}
                 onChange={(e) => setRequestFormData(prev => ({ ...prev, amount: e.target.value }))}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+                required
               />
             </div>
             
-            <div>
-              <Label htmlFor="request-reason">Reason (Optional)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="request-reason" className="text-white">Reason (Optional)</Label>
               <Textarea
                 id="request-reason"
                 placeholder="Enter reason for request"
                 value={requestFormData.reason}
                 onChange={(e) => setRequestFormData(prev => ({ ...prev, reason: e.target.value }))}
                 rows={3}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500 resize-none"
               />
             </div>
-            
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                className="flex-1" 
-                onClick={() => setRequestDialogOpen(false)}
-                disabled={requestLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="flex-1" 
-                onClick={handleRequestAsset}
-                disabled={requestLoading}
-              >
-                {requestLoading ? 'Sending...' : 'Send Request'}
-              </Button>
-            </div>
+          </form>
+          
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={() => setRequestDialogOpen(false)}
+              disabled={requestLoading}
+              className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              onClick={handleRequestAsset}
+              disabled={requestLoading}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+            >
+              {requestLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <HandCoins className="h-4 w-4 mr-2" />
+                  Send Request
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
