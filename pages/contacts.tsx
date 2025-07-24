@@ -276,62 +276,67 @@ export default function ContactsPage() {
         <div className="flex gap-3">
           <Dialog open={qrScannerOpen} onOpenChange={setQrScannerOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 hover:border-white/30 rounded-xl flex items-center gap-2 transition-all duration-200">
                 <Scan className="h-4 w-4" />
                 Scan QR Code
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl">
               <DialogHeader>
-                <DialogTitle>Scan QR Code</DialogTitle>
+                <DialogTitle className="text-white text-xl font-bold">Scan QR Code</DialogTitle>
               </DialogHeader>
-              <div className="py-6 text-center">
-                <QrCode className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">QR Scanner functionality will be implemented here</p>
-                <p className="text-sm text-gray-500 mt-2">This will allow scanning QR codes to add new contacts</p>
-              </div>
+              <GlassCard variant="premium" className="p-8">
+                <div className="text-center">
+                  <QrCode className="h-16 w-16 mx-auto mb-4 text-blue-400" />
+                  <p className="text-white/80 mb-2">QR Scanner functionality will be implemented here</p>
+                  <p className="text-sm text-white/60">This will allow scanning QR codes to add new contacts</p>
+                </div>
+              </GlassCard>
             </DialogContent>
           </Dialog>
           
           <Dialog open={showMyQR} onOpenChange={setShowMyQR}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl flex items-center gap-2">
                 <QrCode className="h-4 w-4" />
                 My QR Code
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl">
               <DialogHeader>
-                <DialogTitle>My Public ID</DialogTitle>
+                <DialogTitle className="text-white text-xl font-bold">My Public ID</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <GlassCard variant="premium" className="p-6">
                 {currentUser && (
                   <>
-                    <div className="flex justify-center">
-                      <QRCodeSVG value={currentUser.publicId || currentUser.public_key || ''} size={200} />
+                    <div className="flex justify-center mb-6">
+                      <div className="p-4 bg-white rounded-2xl">
+                        <QRCodeSVG value={currentUser.publicId || currentUser.public_key || ''} size={200} />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Public Key</Label>
-                      <div className="flex gap-2">
+                    <div className="space-y-3">
+                      <Label className="text-white/80 font-semibold">Public Key</Label>
+                      <div className="flex items-center gap-2">
                         <Input 
                           value={currentUser.publicId || currentUser.public_key || 'N/A'} 
                           readOnly 
-                          className="font-mono text-sm" 
+                          className="font-mono text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm" 
                         />
                         {(currentUser.publicId || currentUser.public_key) && (
                           <Button
-                            variant="outline"
                             size="sm"
+                            className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 hover:border-white/30 rounded-xl transition-all duration-200"
                             onClick={() => copyToClipboard(currentUser.publicId || currentUser.public_key || '', 'Public Key')}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
+                      <p className="text-white/60 text-sm mt-2">Share this QR code with others to receive assets or connect</p>
                     </div>
                   </>
                 )}
-              </div>
+              </GlassCard>
             </DialogContent>
           </Dialog>
         </div>
