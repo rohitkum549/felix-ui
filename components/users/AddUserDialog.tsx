@@ -271,19 +271,19 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
           </div>
         </div>
         
-        <DialogFooter className="space-x-2">
+        <DialogFooter className="flex gap-3 pt-4">
           <Button 
-            variant="outline" 
+            type="button"
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
-            className="border-white/20 text-white hover:bg-white/10 rounded-xl disabled:opacity-50"
+            className="flex-1 bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 hover:border-white/30 rounded-xl disabled:opacity-50 transition-all duration-200"
           >
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={isLoading}
-            className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl disabled:opacity-50"
+            className="flex-1 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl disabled:opacity-50 transition-all duration-200"
           >
             {isLoading ? (
               <>
