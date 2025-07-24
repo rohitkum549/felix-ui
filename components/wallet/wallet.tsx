@@ -62,7 +62,7 @@ const mockTransactions: Transaction[] = [
 ]
 
 export function Wallet() {
-  const [balance, setBalance] = useState(12547.89)
+  const [balance, setBalance] = useState(0)
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
   const [showBalance, setShowBalance] = useState(false)
   const [loading, setLoading] = useState(false)

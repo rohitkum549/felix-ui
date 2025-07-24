@@ -34,7 +34,9 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    role: 'user',
+    firstname: '',
+    lastname: '',
+    role: 'admin',
     password: '',
     entity_belongs_to: 'DevOps',
     entity_manager: '',
@@ -54,6 +56,24 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       toast({
         title: "Validation Error",
         description: "Username is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!formData.firstname.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "First name is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!formData.lastname.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Last name is required",
         variant: "destructive",
       });
       return false;
@@ -127,7 +147,9 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       setFormData({
         username: '',
         email: '',
-        role: 'user',
+        firstname: '',
+        lastname: '',
+        role: 'admin',
         password: '',
         entity_belongs_to: 'DevOps',
         entity_manager: '',
@@ -178,6 +200,40 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
               required
               className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30 disabled:opacity-50"
             />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstname" className="text-white/80 font-medium">
+                First Name
+              </Label>
+              <Input
+                id="firstname"
+                name="firstname"
+                placeholder="Enter first name"
+                value={formData.firstname}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                required
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30 disabled:opacity-50"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="lastname" className="text-white/80 font-medium">
+                Last Name
+              </Label>
+              <Input
+                id="lastname"
+                name="lastname"
+                placeholder="Enter last name"
+                value={formData.lastname}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                required
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30 disabled:opacity-50"
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
