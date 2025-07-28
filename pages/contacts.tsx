@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -265,73 +265,78 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Users className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
+          <Users className="h-8 w-8 text-blue-400" />
+          <h1 className="text-3xl font-bold text-white">Contacts</h1>
         </div>
         
         <div className="flex gap-3">
           <Dialog open={qrScannerOpen} onOpenChange={setQrScannerOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 hover:border-white/30 rounded-xl flex items-center gap-2 transition-all duration-200">
                 <Scan className="h-4 w-4" />
                 Scan QR Code
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl">
               <DialogHeader>
-                <DialogTitle>Scan QR Code</DialogTitle>
+                <DialogTitle className="text-white text-xl font-bold">Scan QR Code</DialogTitle>
               </DialogHeader>
-              <div className="py-6 text-center">
-                <QrCode className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">QR Scanner functionality will be implemented here</p>
-                <p className="text-sm text-gray-500 mt-2">This will allow scanning QR codes to add new contacts</p>
-              </div>
+              <GlassCard variant="premium" className="p-8">
+                <div className="text-center">
+                  <QrCode className="h-16 w-16 mx-auto mb-4 text-blue-400" />
+                  <p className="text-white/80 mb-2">QR Scanner functionality will be implemented here</p>
+                  <p className="text-sm text-white/60">This will allow scanning QR codes to add new contacts</p>
+                </div>
+              </GlassCard>
             </DialogContent>
           </Dialog>
           
           <Dialog open={showMyQR} onOpenChange={setShowMyQR}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl flex items-center gap-2">
                 <QrCode className="h-4 w-4" />
                 My QR Code
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl">
               <DialogHeader>
-                <DialogTitle>My Public ID</DialogTitle>
+                <DialogTitle className="text-white text-xl font-bold">My Public ID</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <GlassCard variant="premium" className="p-6">
                 {currentUser && (
                   <>
-                    <div className="flex justify-center">
-                      <QRCodeSVG value={currentUser.publicId || currentUser.public_key || ''} size={200} />
+                    <div className="flex justify-center mb-6">
+                      <div className="p-4 bg-white rounded-2xl">
+                        <QRCodeSVG value={currentUser.publicId || currentUser.public_key || ''} size={200} />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Public Key</Label>
-                      <div className="flex gap-2">
+                    <div className="space-y-3">
+                      <Label className="text-white/80 font-semibold">Public Key</Label>
+                      <div className="flex items-center gap-2">
                         <Input 
                           value={currentUser.publicId || currentUser.public_key || 'N/A'} 
                           readOnly 
-                          className="font-mono text-sm" 
+                          className="font-mono text-sm bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm" 
                         />
                         {(currentUser.publicId || currentUser.public_key) && (
                           <Button
-                            variant="outline"
                             size="sm"
+                            className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 hover:border-white/30 rounded-xl transition-all duration-200"
                             onClick={() => copyToClipboard(currentUser.publicId || currentUser.public_key || '', 'Public Key')}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
+                      <p className="text-white/60 text-sm mt-2">Share this QR code with others to receive assets or connect</p>
                     </div>
                   </>
                 )}
-              </div>
+              </GlassCard>
             </DialogContent>
           </Dialog>
         </div>
@@ -339,12 +344,12 @@ export default function ContactsPage() {
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-4 w-4" />
         <Input
           placeholder="Search contacts..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30"
         />
       </div>
 
@@ -355,35 +360,47 @@ export default function ContactsPage() {
           const isActive = contact.isActive ?? contact.is_active ?? (contact.status === 'active');
           
           return (
-            <Card key={contact.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{contact.username}</CardTitle>
-                  <Badge variant={isActive ? 'default' : 'secondary'}>
-                    {isActive ? 'Active' : 'Inactive'}
-                  </Badge>
+            <GlassCard key={contact.id} variant="premium" className="p-6 hover:bg-white/10 transition-all duration-300">
+              <div className="flex items-center justify-between pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {contact.username
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{contact.username}</h3>
+                    <p className="text-sm text-white/60">{contact.email}</p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600">{contact.email}</p>
-                <p className="text-xs text-gray-500 capitalize">{contact.role}</p>
-                {contact.entity_belongs_to && (
-                  <p className="text-xs text-gray-400">Entity: {contact.entity_belongs_to}</p>
-                )}
-              </CardHeader>
+                <Badge className={isActive ? 'bg-green-500/20 text-green-400 border-0' : 'bg-red-500/20 text-red-400 border-0'}>
+                  {isActive ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
               
-              <CardContent className="space-y-3">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs text-white/50 capitalize">Role: {contact.role}</p>
+                  {contact.entity_belongs_to && (
+                    <p className="text-xs text-white/40">Entity: {contact.entity_belongs_to}</p>
+                  )}
+                </div>
+                
                 <div>
-                  <Label className="text-xs text-gray-500">Public Key</Label>
-                  <div className="flex gap-1 mt-1">
-                    <Input
-                      value={publicKey ? publicKey.substring(0, 20) + '...' : 'N/A'}
-                      readOnly
-                      className="font-mono text-xs h-8"
-                    />
+                  <Label className="text-xs text-white/40">Public Key</Label>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-white/80 font-mono text-xs flex-1">
+                      {publicKey ? publicKey.substring(0, 20) + '...' : 'N/A'}
+                    </span>
                     {publicKey && (
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-8 px-2"
+                        className="h-6 w-6 p-1 text-white/60 hover:text-white hover:bg-white/10"
                         onClick={() => copyToClipboard(publicKey, 'Public Key')}
                       >
                         <Copy className="h-3 w-3" />
@@ -392,13 +409,13 @@ export default function ContactsPage() {
                   </div>
                 </div>
                 
-                <Separator />
+                <div className="border-t border-white/10 my-3" />
                 
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 text-green-600 border-green-200 hover:bg-green-50"
+                    className="flex-1 text-green-400 border-green-400/30 hover:bg-green-400/10 hover:border-green-400/50"
                     onClick={() => openSendDialog(publicKey)}
                     disabled={!publicKey}
                   >
@@ -408,7 +425,7 @@ export default function ContactsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                    className="flex-1 text-blue-400 border-blue-400/30 hover:bg-blue-400/10 hover:border-blue-400/50"
                     onClick={() => openRequestDialog(publicKey)}
                     disabled={!publicKey}
                   >
@@ -416,19 +433,19 @@ export default function ContactsPage() {
                     Request
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
           );
         })}
       </div>
 
       {filteredContacts.length === 0 && (
         <div className="text-center py-12">
-          <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <Users className="h-16 w-16 text-white/20 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">
             {searchTerm ? 'No contacts found' : 'No contacts yet'}
           </h3>
-          <p className="text-gray-600">
+          <p className="text-white/60">
             {searchTerm 
               ? 'Try adjusting your search terms' 
               : 'Add contacts by scanning their QR codes'}
@@ -438,25 +455,29 @@ export default function ContactsPage() {
 
       {/* Send Asset Dialog */}
       <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="bg-gray-900 border border-gray-800 text-white max-w-md rounded-lg overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-green-600" />
+            <DialogTitle className="text-lg font-bold flex items-center">
+              <Send className="h-5 w-5 mr-2" />
               Send Asset
             </DialogTitle>
+            <div className="text-gray-400 text-sm">
+              Send digital assets to another wallet
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="send-asset">Asset</Label>
+          
+          <form onSubmit={(e) => { e.preventDefault(); handleSendAsset(); }} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="send-asset" className="text-white">Asset</Label>
               <Select value={sendFormData.assetId} onValueChange={(value) => 
                 setSendFormData(prev => ({ ...prev, assetId: value }))
               }>
-                <SelectTrigger>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Select an asset" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {assets.map((asset) => (
-                    <SelectItem key={asset.id} value={asset.id}>
+                    <SelectItem key={asset.id} value={asset.id} className="text-white hover:bg-gray-700">
                       {asset.name} ({asset.symbol})
                     </SelectItem>
                   ))}
@@ -464,8 +485,8 @@ export default function ContactsPage() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="send-amount">Amount</Label>
+            <div className="space-y-2">
+              <Label htmlFor="send-amount" className="text-white">Amount</Label>
               <Input
                 id="send-amount"
                 type="number"
@@ -473,62 +494,80 @@ export default function ContactsPage() {
                 placeholder="Enter amount"
                 value={sendFormData.amount}
                 onChange={(e) => setSendFormData(prev => ({ ...prev, amount: e.target.value }))}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+                required
               />
             </div>
             
-            <div>
-              <Label htmlFor="send-reason">Reason (Optional)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="send-reason" className="text-white">Reason (Optional)</Label>
               <Textarea
                 id="send-reason"
                 placeholder="Enter reason for transfer"
                 value={sendFormData.reason}
                 onChange={(e) => setSendFormData(prev => ({ ...prev, reason: e.target.value }))}
                 rows={3}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500 resize-none"
               />
             </div>
-            
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                className="flex-1" 
-                onClick={() => setSendDialogOpen(false)}
-                disabled={sendLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="flex-1" 
-                onClick={handleSendAsset}
-                disabled={sendLoading}
-              >
-                {sendLoading ? 'Sending...' : 'Send Asset'}
-              </Button>
-            </div>
+          </form>
+          
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={() => setSendDialogOpen(false)}
+              disabled={sendLoading}
+              className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              onClick={handleSendAsset}
+              disabled={sendLoading}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+            >
+              {sendLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Asset
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Request Asset Dialog */}
       <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="bg-gray-900 border border-gray-800 text-white max-w-md rounded-lg overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <HandCoins className="h-5 w-5 text-blue-600" />
+            <DialogTitle className="text-lg font-bold flex items-center">
+              <HandCoins className="h-5 w-5 mr-2" />
               Request Asset
             </DialogTitle>
+            <div className="text-gray-400 text-sm">
+              Request digital assets from another wallet
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="request-asset">Asset</Label>
+          
+          <form onSubmit={(e) => { e.preventDefault(); handleRequestAsset(); }} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="request-asset" className="text-white">Asset</Label>
               <Select value={requestFormData.assetId} onValueChange={(value) => 
                 setRequestFormData(prev => ({ ...prev, assetId: value }))
               }>
-                <SelectTrigger>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Select an asset" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {assets.map((asset) => (
-                    <SelectItem key={asset.id} value={asset.id}>
+                    <SelectItem key={asset.id} value={asset.id} className="text-white hover:bg-gray-700">
                       {asset.name} ({asset.symbol})
                     </SelectItem>
                   ))}
@@ -536,8 +575,8 @@ export default function ContactsPage() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="request-amount">Amount</Label>
+            <div className="space-y-2">
+              <Label htmlFor="request-amount" className="text-white">Amount</Label>
               <Input
                 id="request-amount"
                 type="number"
@@ -545,37 +584,52 @@ export default function ContactsPage() {
                 placeholder="Enter amount"
                 value={requestFormData.amount}
                 onChange={(e) => setRequestFormData(prev => ({ ...prev, amount: e.target.value }))}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+                required
               />
             </div>
             
-            <div>
-              <Label htmlFor="request-reason">Reason (Optional)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="request-reason" className="text-white">Reason (Optional)</Label>
               <Textarea
                 id="request-reason"
                 placeholder="Enter reason for request"
                 value={requestFormData.reason}
                 onChange={(e) => setRequestFormData(prev => ({ ...prev, reason: e.target.value }))}
                 rows={3}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500 resize-none"
               />
             </div>
-            
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                className="flex-1" 
-                onClick={() => setRequestDialogOpen(false)}
-                disabled={requestLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="flex-1" 
-                onClick={handleRequestAsset}
-                disabled={requestLoading}
-              >
-                {requestLoading ? 'Sending...' : 'Send Request'}
-              </Button>
-            </div>
+          </form>
+          
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={() => setRequestDialogOpen(false)}
+              disabled={requestLoading}
+              className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              onClick={handleRequestAsset}
+              disabled={requestLoading}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+            >
+              {requestLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <HandCoins className="h-4 w-4 mr-2" />
+                  Send Request
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

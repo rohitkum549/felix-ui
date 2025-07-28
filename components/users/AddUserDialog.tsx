@@ -34,7 +34,9 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    role: 'user',
+    firstname: '',
+    lastname: '',
+    role: 'admin',
     password: '',
     entity_belongs_to: 'DevOps',
     entity_manager: '',
@@ -54,6 +56,24 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       toast({
         title: "Validation Error",
         description: "Username is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!formData.firstname.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "First name is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!formData.lastname.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Last name is required",
         variant: "destructive",
       });
       return false;
@@ -127,7 +147,9 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       setFormData({
         username: '',
         email: '',
-        role: 'user',
+        firstname: '',
+        lastname: '',
+        role: 'admin',
         password: '',
         entity_belongs_to: 'DevOps',
         entity_manager: '',
@@ -178,6 +200,40 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
               required
               className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30 disabled:opacity-50"
             />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstname" className="text-white/80 font-medium">
+                First Name
+              </Label>
+              <Input
+                id="firstname"
+                name="firstname"
+                placeholder="Enter first name"
+                value={formData.firstname}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                required
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30 disabled:opacity-50"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="lastname" className="text-white/80 font-medium">
+                Last Name
+              </Label>
+              <Input
+                id="lastname"
+                name="lastname"
+                placeholder="Enter last name"
+                value={formData.lastname}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                required
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl backdrop-blur-sm focus:bg-white/15 focus:border-white/30 disabled:opacity-50"
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
@@ -271,19 +327,19 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
           </div>
         </div>
         
-        <DialogFooter className="space-x-2">
+        <DialogFooter className="flex gap-3 pt-4">
           <Button 
-            variant="outline" 
+            type="button"
             onClick={() => setIsOpen(false)}
             disabled={isLoading}
-            className="border-white/20 text-white hover:bg-white/10 rounded-xl disabled:opacity-50"
+            className="flex-1 bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 hover:border-white/30 rounded-xl disabled:opacity-50 transition-all duration-200"
           >
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={isLoading}
-            className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl disabled:opacity-50"
+            className="flex-1 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl disabled:opacity-50 transition-all duration-200"
           >
             {isLoading ? (
               <>

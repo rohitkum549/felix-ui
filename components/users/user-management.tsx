@@ -504,9 +504,9 @@ export function UserManagement() {
                       <TableHead className="text-white/80 font-semibold">User</TableHead>
                       <TableHead className="text-white/80 font-semibold">Contact</TableHead>
                       <TableHead className="text-white/80 font-semibold">Role</TableHead>
-                      <TableHead className="text-white/80 font-semibold">Entity</TableHead>
+                      <TableHead className="text-white/80 font-semibold">Department</TableHead>
                       <TableHead className="text-white/80 font-semibold">Public Key</TableHead>
-                      <TableHead className="text-white/80 font-semibold">Status & Setup</TableHead>
+                      <TableHead className="text-white/80 font-semibold">Status</TableHead>
                       <TableHead className="text-white/80 font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
