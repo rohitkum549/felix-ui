@@ -21,7 +21,6 @@ interface SendMoneyDialogProps {
   onClose: () => void
   onSuccess?: () => void
 }
-
 interface SendMoneyRequest {
   senderSecret: string
   receiverPublic: string

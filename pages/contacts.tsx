@@ -543,7 +543,6 @@ export default function ContactsPage() {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Request Asset Dialog */}
       <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
         <DialogContent className="bg-gray-900 border border-gray-800 text-white max-w-md rounded-lg overflow-hidden">
