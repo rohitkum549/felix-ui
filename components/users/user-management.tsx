@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building, Wallet, Shield, Coins, Loader2, Users, Factory, DollarSign, Settings } from "lucide-react"
 import { AddUserDialog } from "./AddUserDialog"
 import { SendAssetDialog } from "./SendAssetDialog"
+import { CreateEntityDialog } from "../entities/CreateEntityDialog"
 import { felixApi } from "@/lib/api-service"
 import { useToast } from "@/hooks/use-toast"
 
@@ -670,10 +671,10 @@ export function UserManagement() {
                 <h3 className="text-xl font-bold text-white mb-2">Entity Management</h3>
                 <p className="text-white/60">Create and manage organizational entities and their hierarchies</p>
               </div>
-              <Button className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Entity
-              </Button>
+              <CreateEntityDialog onEntityCreated={(entityData) => {
+                console.log('New entity created:', entityData);
+                // You can add any refresh logic here if needed
+              }} />
             </div>
             
             {/* Entity Cards Grid */}

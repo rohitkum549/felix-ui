@@ -866,6 +866,18 @@ class FelixApiService {
   }
 
 // User Profile APIs
+  async createEntity(entityData: {
+    name: string
+    code: string
+    description?: string
+    generate_stellar_keys: boolean
+  }) {
+    return this.request("/api/entities", {
+      method: "POST",
+      body: JSON.stringify(entityData),
+    })
+  }
+
   async fetchUserProfile(email: string, retryCount = 0, maxRetries = 3) {
     // Use API base URL from environment for profile
     const url = `${this.baseURL}/api/fetch/profile`
