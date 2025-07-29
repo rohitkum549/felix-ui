@@ -11,6 +11,7 @@ import { Service } from "@/lib/marketplace-service"
 import { useProfile } from "@/hooks/use-profile"
 import { useToast } from "@/hooks/use-toast"
 import { handleBuyNow } from "./buyNowHandler"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 import { ProductCard } from "./ProductCard"
 import { AddServiceDialog } from "./AddServiceDialog"
 import { RequestServiceDialog } from "./RequestServiceDialog"
@@ -130,8 +131,9 @@ export function Marketplace() {
       setRequestedServices(services);
       
     } catch (error) {
-      setRequestedError(error instanceof Error ? error.message : 'Failed to fetch requested services');
-      console.error('Error fetching requested services:', error);
+      const errorMsg = getErrorMessage(error, 'Failed to fetch requested services');
+      setRequestedError(errorMsg);
+      logError('Fetch Requested Services', error);
     } finally {
       setRequestedLoading(false);
     }
@@ -309,7 +311,7 @@ export function Marketplace() {
             {activeTab === "all" ? (
               filteredItems.length > 0 ? (
                 filteredItems.map((item) => (
-                  <ProductCard key={item.id} product={item} secretKey={profile?.secret_key} userPublicKey={profile?.public_key} />
+                  <ProductCard key={item.id} product={item} secretKey={profile?.secret_key} userPublicKey={profile?.public_key} onPurchaseSuccess={loadServices} />
                 ))
               ) : (
                 <div className="col-span-full text-center py-10 text-white/60">

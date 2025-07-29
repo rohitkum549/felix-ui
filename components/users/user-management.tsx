@@ -11,8 +11,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Search, Plus, MoreVertical, Edit, Trash2, UserCheck, UserX, Mail, Key, Building, Wallet, Shield, Coins, Loader2, Users, Factory, DollarSign, Settings } from "lucide-react"
 import { AddUserDialog } from "./AddUserDialog"
 import { SendAssetDialog } from "./SendAssetDialog"
+import { CreateEntityDialog } from "../entities/CreateEntityDialog"
+import { EntityCard } from "../entities/EntityCard"
 import { felixApi } from "@/lib/api-service"
 import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 
 interface User {
   id: string
@@ -94,6 +97,21 @@ interface Asset {
   updatedAt: string
 }
 
+interface Entity {
+  id: string
+  name: string
+  code: string
+  description?: string
+  stellar_public_key: string
+  stellar_secret_key: string
+  asset_code: string
+  created_by: string
+  entity_manager_id?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -106,6 +124,10 @@ export function UserManagement() {
     user: null,
   })
   
+// Entity Management State
+  const [entities, setEntities] = useState<Entity[]>([])
+  const [entitiesLoading, setEntitiesLoading] = useState(false)
+
   // Asset Management State
   const [assets, setAssets] = useState<Asset[]>([])
   const [assetsLoading, setAssetsLoading] = useState(false)
@@ -126,6 +148,7 @@ export function UserManagement() {
   
   useEffect(() => {
     loadAssets()
+    loadEntities()
   }, [])
 
   const loadUsers = async () => {
@@ -134,10 +157,10 @@ export function UserManagement() {
       const data = await felixApi.getUsersByGroup(selectedGroup)
       setUsers(data.users || data || [])
     } catch (error: any) {
-      console.error("Failed to load users:", error)
+      logError("Load Users", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to load users. Please try again.",
+        description: getErrorMessage(error, "Failed to load users. Please try again."),
         variant: "destructive",
         duration: 5000, // 5 seconds
       })
@@ -152,16 +175,64 @@ export function UserManagement() {
       const data = await felixApi.getAllAssets()
       setAssets(data.assets || data || [])
     } catch (error: any) {
-      console.error("Failed to load assets:", error)
+      logError("Load Assets", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to load assets. Please try again.",
+        description: getErrorMessage(error, "Failed to load assets. Please try again."),
         variant: "destructive",
         duration: 5000,
       })
     } finally {
       setAssetsLoading(false)
     }
+  }
+
+  const loadEntities = async () => {
+    setEntitiesLoading(true)
+    try {
+      const data = await felixApi.getEntities()
+      console.log('Entities API response:', data)
+      
+      // Handle different possible response formats
+      let entitiesArray = []
+      if (Array.isArray(data)) {
+        entitiesArray = data
+      } else if (data && data.data && Array.isArray(data.data.entities)) {
+        // Handle nested structure: { data: { entities: [...] } }
+        entitiesArray = data.data.entities
+      } else if (data && Array.isArray(data.entities)) {
+        entitiesArray = data.entities
+      } else if (data && Array.isArray(data.data)) {
+        entitiesArray = data.data
+      } else if (data && typeof data === 'object' && !Array.isArray(data)) {
+        // If it's a single entity object, wrap it in an array
+        entitiesArray = [data]
+      }
+      
+      console.log('Parsed entities array:', entitiesArray)
+      setEntities(entitiesArray)
+    } catch (error: any) {
+      logError("Load Entities", error)
+      setEntities([]) // Ensure entities is always an array
+      toast({
+        title: "Error",
+        description: getErrorMessage(error, "Failed to load entities. Please try again."),
+        variant: "destructive",
+        duration: 5000,
+      })
+    } finally {
+      setEntitiesLoading(false)
+    }
+  }
+
+  const handleEntityEdit = (entity: Entity) => {
+    console.log('Edit entity:', entity)
+    // TODO: Implement entity edit functionality
+  }
+
+  const handleEntityManage = (entity: Entity) => {
+    console.log('Manage entity:', entity)
+    // TODO: Implement entity management functionality
   }
 
   const handleConnectWallet = async (user: User) => {
@@ -202,12 +273,12 @@ export function UserManagement() {
       console.log('Wallet funded successfully:', response)
       
     } catch (error: any) {
-      console.error('Error funding wallet:', error)
+      logError('Fund Wallet', error)
       
       // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to fund wallet. Please try again.",
+        description: getErrorMessage(error, "Failed to fund wallet. Please try again."),
         variant: "destructive",
         duration: 5000, // 5 seconds
       })
@@ -254,12 +325,12 @@ export function UserManagement() {
       console.log('Trustline added successfully:', response)
       
     } catch (error: any) {
-      console.error('Error adding trustline:', error)
+      logError('Add Trustline', error)
       
       // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to add trustline. Please try again.",
+        description: getErrorMessage(error, "Failed to add trustline. Please try again."),
         variant: "destructive",
         duration: 5000, // 5 seconds
       })
@@ -670,58 +741,38 @@ export function UserManagement() {
                 <h3 className="text-xl font-bold text-white mb-2">Entity Management</h3>
                 <p className="text-white/60">Create and manage organizational entities and their hierarchies</p>
               </div>
-              <Button className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Entity
-              </Button>
+              <CreateEntityDialog onEntityCreated={(entityData) => {
+                console.log('New entity created:', entityData);
+                loadEntities(); // Refresh entities list
+              }} />
             </div>
             
             {/* Entity Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { name: "DevOps Team", type: "Department", members: 24, manager: "John Doe", status: "Active" },
-                { name: "QA Team", type: "Department", members: 18, manager: "Jane Smith", status: "Active" },
-                { name: "HR Department", type: "Department", members: 8, manager: "Mike Johnson", status: "Active" },
-                { name: "Managers", type: "Group", members: 12, manager: "Sarah Wilson", status: "Active" },
-                { name: "Support Team", type: "Department", members: 15, manager: "Alex Brown", status: "Inactive" },
-                { name: "Finance", type: "Department", members: 6, manager: "Lisa Davis", status: "Active" },
-              ].map((entity, index) => (
-                <GlassCard key={index} variant="premium" className="p-4 hover:bg-white/5 transition-all duration-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
-                        <Factory className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="text-white font-semibold">{entity.name}</h4>
-                        <p className="text-white/60 text-sm">{entity.type}</p>
-                      </div>
-                    </div>
-                    <Badge className={entity.status === "Active" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}>
-                      {entity.status}
-                    </Badge>
+              {entitiesLoading && (
+                <div className="col-span-full flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  <span className="ml-2 text-white/60">Loading entities...</span>
+                </div>
+              )}
+              
+              {!entitiesLoading && entities.length === 0 && (
+                <div className="col-span-full flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <Factory className="h-12 w-12 text-white/40 mx-auto mb-4" />
+                    <p className="text-white/60">No entities found.</p>
+                    <p className="text-white/40 text-sm mt-2">Create your first entity to get started.</p>
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-white/60">Members:</span>
-                      <span className="text-white">{entity.members}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/60">Manager:</span>
-                      <span className="text-white">{entity.manager}</span>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2 mt-4">
-                    <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg flex-1">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg flex-1">
-                      <Settings className="h-3 w-3 mr-1" />
-                      Manage
-                    </Button>
-                  </div>
-                </GlassCard>
+                </div>
+              )}
+              
+              {!entitiesLoading && Array.isArray(entities) && entities.map((entity) => (
+                <EntityCard
+                  key={entity.id}
+                  entity={entity}
+                  onEdit={handleEntityEdit}
+                  onManage={handleEntityManage}
+                />
               ))}
             </div>
           </GlassCard>

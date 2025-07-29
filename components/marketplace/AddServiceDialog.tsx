@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useProfile } from "@/hooks/use-profile"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 import { felixApi } from "@/lib/api-service"
 import { PlusCircle, Star, Loader2 } from "lucide-react"
 
@@ -120,9 +121,10 @@ export function AddServiceDialog({ onServiceAdded }: { onServiceAdded: () => voi
       onServiceAdded()
       
     } catch (error) {
+      logError('Create Service', error)
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create service",
+        description: getErrorMessage(error, "Failed to create service"),
         variant: "destructive"
       })
     } finally {

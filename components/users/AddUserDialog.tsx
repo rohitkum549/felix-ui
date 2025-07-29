@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, User, Mail, Lock, Building, Users, Loader2 } from 'lucide-react';
 import { felixApi } from '@/lib/api-service';
 import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage, logError } from '@/lib/error-utils';
 
 interface AddUserDialogProps {
   onUserAdded?: (userData: any) => void;
@@ -156,12 +157,12 @@ export function AddUserDialog({ onUserAdded }: AddUserDialogProps) {
       });
       setIsOpen(false);
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      logError('Create User', error);
       
       // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to create user. Please try again.",
+        description: getErrorMessage(error, "Failed to create user. Please try again."),
         variant: "destructive",
       });
     } finally {

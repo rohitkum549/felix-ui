@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { felixApi } from "@/lib/api-service"
 import { getUserSecret, formatBalance } from "@/lib/wallet-service"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 import { SendMoneyDialog } from "./SendMoneyDialog"
 import {
   WalletIcon,
@@ -103,7 +104,7 @@ export function Wallet() {
       // For now, keep using mock transactions
       // In the future, you might want to implement a real transaction API
     } catch (error) {
-      console.error("Failed to load wallet data:", error)
+      logError("Load Wallet Data", error)
     } finally {
       setLoading(false)
     }
