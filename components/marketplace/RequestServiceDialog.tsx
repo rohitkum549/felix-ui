@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useProfile } from "@/hooks/use-profile"
 import { felixApi } from "@/lib/api-service"
 import { UserPlus, Loader2 } from "lucide-react"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 
 export function RequestServiceDialog({ onServiceRequested }: { onServiceRequested: () => void }) {
   const { profile } = useProfile()
@@ -93,9 +94,10 @@ export function RequestServiceDialog({ onServiceRequested }: { onServiceRequeste
       onServiceRequested()
       
     } catch (error) {
+      logError('Request Service', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to request service",
+        description: getErrorMessage(error, "Failed to request service"),
         variant: "destructive"
       })
     } finally {

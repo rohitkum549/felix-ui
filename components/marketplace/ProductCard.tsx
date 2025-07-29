@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Star, Heart, ShoppingCart } from "lucide-react";
 import { handleBuyNow } from "./buyNowHandler";
 import PaymentDialog from "./PaymentDialog";
+import { getErrorMessage, logError } from "@/lib/error-utils";
 
 interface ProductCardProps {
   product: {
@@ -48,8 +49,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey, us
         setTransactionHash(txHash);
       });
     } catch (error: any) {
+      logError('Product Purchase', error);
       setPaymentStatus('error');
-      setErrorMessage(error.message || 'Something went wrong during the payment.');
+      setErrorMessage(getErrorMessage(error, 'Something went wrong during the payment.'));
     }
   };
 
