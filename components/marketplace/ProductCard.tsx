@@ -18,9 +18,10 @@ interface ProductCardProps {
   };
   secretKey?: string;
   userPublicKey?: string;
+  onPurchaseSuccess?: () => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey, userPublicKey }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey, userPublicKey, onPurchaseSuccess }) => {
   const isOwnService = userPublicKey && product.sender_id === userPublicKey;
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -35,10 +36,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, secretKey, us
 
   const closeDialog = () => {
     setIsPaymentDialogOpen(false);
-    // If payment was successful, reload the page after dialog closes
-    if (paymentStatus === 'success') {
-      window.location.reload();
+    // If payment was successful, trigger the callback to refresh data
+    if (paymentStatus === 'success' && onPurchaseSuccess) {
+      onPurchaseSuccess();
     }
+    // Reset dialog state for next use
+    setPaymentStatus('idle');
+    setErrorMessage('');
+    setTransactionHash('');
   };
 
   const handlePurchase = async () => {
