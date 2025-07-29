@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Plus, Building, Loader2 } from "lucide-react"
 import { felixApi } from "@/lib/api-service"
 import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 
 interface CreateEntityDialogProps {
   onEntityCreated?: (entity: any) => void
@@ -86,11 +87,11 @@ export function CreateEntityDialog({ onEntityCreated }: CreateEntityDialogProps)
       }
 
     } catch (error: any) {
-      console.error('Error creating entity:', error)
+      logError('Create Entity', error)
       
       toast({
         title: "Error",
-        description: error.message || "Failed to create entity. Please try again.",
+        description: getErrorMessage(error, "Failed to create entity. Please try again."),
         variant: "destructive",
         duration: 5000,
       })

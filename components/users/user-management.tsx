@@ -15,6 +15,7 @@ import { CreateEntityDialog } from "../entities/CreateEntityDialog"
 import { EntityCard } from "../entities/EntityCard"
 import { felixApi } from "@/lib/api-service"
 import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 
 interface User {
   id: string
@@ -156,10 +157,10 @@ export function UserManagement() {
       const data = await felixApi.getUsersByGroup(selectedGroup)
       setUsers(data.users || data || [])
     } catch (error: any) {
-      console.error("Failed to load users:", error)
+      logError("Load Users", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to load users. Please try again.",
+        description: getErrorMessage(error, "Failed to load users. Please try again."),
         variant: "destructive",
         duration: 5000, // 5 seconds
       })
@@ -174,10 +175,10 @@ export function UserManagement() {
       const data = await felixApi.getAllAssets()
       setAssets(data.assets || data || [])
     } catch (error: any) {
-      console.error("Failed to load assets:", error)
+      logError("Load Assets", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to load assets. Please try again.",
+        description: getErrorMessage(error, "Failed to load assets. Please try again."),
         variant: "destructive",
         duration: 5000,
       })
@@ -211,11 +212,11 @@ export function UserManagement() {
       console.log('Parsed entities array:', entitiesArray)
       setEntities(entitiesArray)
     } catch (error: any) {
-      console.error("Failed to load entities:", error)
+      logError("Load Entities", error)
       setEntities([]) // Ensure entities is always an array
       toast({
         title: "Error",
-        description: error.message || "Failed to load entities. Please try again.",
+        description: getErrorMessage(error, "Failed to load entities. Please try again."),
         variant: "destructive",
         duration: 5000,
       })
@@ -272,12 +273,12 @@ export function UserManagement() {
       console.log('Wallet funded successfully:', response)
       
     } catch (error: any) {
-      console.error('Error funding wallet:', error)
+      logError('Fund Wallet', error)
       
       // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to fund wallet. Please try again.",
+        description: getErrorMessage(error, "Failed to fund wallet. Please try again."),
         variant: "destructive",
         duration: 5000, // 5 seconds
       })
@@ -324,12 +325,12 @@ export function UserManagement() {
       console.log('Trustline added successfully:', response)
       
     } catch (error: any) {
-      console.error('Error adding trustline:', error)
+      logError('Add Trustline', error)
       
       // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to add trustline. Please try again.",
+        description: getErrorMessage(error, "Failed to add trustline. Please try again."),
         variant: "destructive",
         duration: 5000, // 5 seconds
       })

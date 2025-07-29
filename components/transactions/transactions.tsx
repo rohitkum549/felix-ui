@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { felixApi } from "@/lib/api-service"
 import { profileService } from "@/lib/profile-service"
 import { useToast } from "@/hooks/use-toast"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 
 interface TransactionDetail {
   id: string
@@ -63,7 +64,12 @@ export function Transactions() {
         setTransactions([])
       }
     } catch (error) {
-      console.error("Failed to load transactions:", error)
+      logError("Load Transactions", error)
+      toast({
+        title: "Error",
+        description: getErrorMessage(error, "Failed to load transactions"),
+        variant: "destructive",
+      })
       setTransactions([])
     } finally {
       setLoading(false)

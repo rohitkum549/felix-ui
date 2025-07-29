@@ -7,6 +7,7 @@ import { Users, DollarSign, ShoppingCart, ArrowUpRight, ArrowDownRight, MoreVert
 import { useAuth } from "@/contexts/auth-context"
 import { useProfile } from "@/hooks/use-profile"
 import { useDashboard } from "@/hooks/use-dashboard"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 import { TransactionCard } from "./transaction-card"
 import { ServiceCard } from "./service-card"
 import { ActivityGraph } from "./activity-graph"
@@ -84,7 +85,7 @@ useEffect(() => {
           // Set flag to prevent additional loads
           sessionStorage.setItem(profileLoadedKey, 'true');
         } catch (error) {
-          console.error("Failed to fetch profile data:", error);
+          logError("Dashboard Profile Fetch", error);
         }
       }
     };
@@ -194,7 +195,7 @@ useEffect(() => {
               <Shield className="h-8 w-8" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">Error Loading Dashboard</h3>
-            <p className="text-white/60 mb-4">{dashboardError}</p>
+            <p className="text-white/60 mb-4">{getErrorMessage(dashboardError, "Failed to load dashboard data")}</p>
             <Button
               onClick={() => refetch()}
               variant="outline"

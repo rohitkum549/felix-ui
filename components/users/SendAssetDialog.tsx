@@ -19,6 +19,7 @@ import { Plus, Key, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { felixApi } from '@/lib/api-service';
 import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage, logError } from '@/lib/error-utils';
 
 interface SendAssetDialogProps {
   publicKey: string;
@@ -78,12 +79,12 @@ export function SendAssetDialog({
       onClose();
       
     } catch (error: any) {
-      console.error('Error sending asset:', error);
+      logError('Send Asset', error);
       
       // Show error toast
       toast({
         title: "Error",
-        description: error.message || "Failed to send asset. Please try again.",
+        description: getErrorMessage(error, "Failed to send asset. Please try again."),
         variant: "destructive",
         duration: 5000, // 5 seconds
       });

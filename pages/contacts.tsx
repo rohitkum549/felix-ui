@@ -14,6 +14,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { felixApi } from '@/lib/api-service'
 import { useAuth } from '@/contexts/auth-context'
 import { toast } from 'sonner'
+import { getErrorMessage, logError } from '@/lib/error-utils'
 import { 
   Users, 
   QrCode, 
@@ -73,7 +74,7 @@ export default function ContactsPage() {
   try {
     authData = useAuth();
   } catch (error) {
-    console.error('Auth context error:', error);
+    logError('Auth Context', error);
     // Fallback when auth context is not available
     authData = {
       isAuthenticated: false,
@@ -168,8 +169,8 @@ export default function ContactsPage() {
         setAssets(activeAssets);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Failed to load contacts and assets');
+      logError('Load Contacts Data', error);
+      toast.error(getErrorMessage(error, 'Failed to load contacts and assets'));
     } finally {
       setIsLoading(false);
     }
@@ -199,8 +200,8 @@ export default function ContactsPage() {
         toast.error(response.message || 'Failed to send asset');
       }
     } catch (error) {
-      console.error('Error sending asset:', error);
-      toast.error('Failed to send asset');
+      logError('Send Asset', error);
+      toast.error(getErrorMessage(error, 'Failed to send asset'));
     } finally {
       setSendLoading(false);
     }
@@ -222,8 +223,8 @@ export default function ContactsPage() {
       setRequestDialogOpen(false);
       setRequestFormData({ senderId: '', assetId: '', amount: '', reason: '' });
     } catch (error) {
-      console.error('Error requesting asset:', error);
-      toast.error('Failed to send request');
+      logError('Request Asset', error);
+      toast.error(getErrorMessage(error, 'Failed to send request'));
     } finally {
       setRequestLoading(false);
     }
@@ -234,7 +235,7 @@ export default function ContactsPage() {
       await navigator.clipboard.writeText(text);
       toast.success(`${label} copied to clipboard`);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      logError('Copy to Clipboard', error);
       toast.error('Failed to copy to clipboard');
     }
   };

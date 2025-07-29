@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { profileService } from "@/lib/profile-service"
 import { felixApi } from "@/lib/api-service"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 
 interface SendMoneyDialogProps {
   isOpen: boolean
@@ -86,8 +87,8 @@ export function SendMoneyDialog({ isOpen, onClose, onSuccess }: SendMoneyDialogP
         throw new Error("Failed to send money")
       }
     } catch (error) {
-      console.error("Send money error:", error)
-      setErrorMessage(error instanceof Error ? error.message : "An error occurred while sending money")
+      logError("Send Money", error)
+      setErrorMessage(getErrorMessage(error, "An error occurred while sending money"))
       setStatus("error")
     }
   }

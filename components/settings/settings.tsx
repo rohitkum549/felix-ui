@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { User, Bell, Shield, Palette, Globe, Key, Smartphone, Mail, Save } from "lucide-react"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 
 interface UserInfo {
   sub?: string
@@ -66,8 +67,10 @@ export function Settings() {
             language: "en" // Default, can be expanded to store user preference
           })
         }
-      } catch (error) {
-        console.error("Error loading user info from localStorage:", error)
+    } catch (error) {
+        logError("Error loading user info from localStorage", error)
+        // Display an error message using toasts or your preferred UI component
+        // toast.error(getErrorMessage(error))
       }
     }
 
@@ -134,7 +137,9 @@ export function Settings() {
         console.log("Profile updated successfully!")
       }
     } catch (error) {
-      console.error("Error saving profile:", error)
+      logError("Error saving profile", error)
+      // Display an error message using toasts or your preferred UI component
+      // toast.error(getErrorMessage(error))
     }
   }
 

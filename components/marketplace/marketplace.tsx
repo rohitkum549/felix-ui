@@ -11,6 +11,7 @@ import { Service } from "@/lib/marketplace-service"
 import { useProfile } from "@/hooks/use-profile"
 import { useToast } from "@/hooks/use-toast"
 import { handleBuyNow } from "./buyNowHandler"
+import { getErrorMessage, logError } from "@/lib/error-utils"
 import { ProductCard } from "./ProductCard"
 import { AddServiceDialog } from "./AddServiceDialog"
 import { RequestServiceDialog } from "./RequestServiceDialog"
@@ -130,8 +131,9 @@ export function Marketplace() {
       setRequestedServices(services);
       
     } catch (error) {
-      setRequestedError(error instanceof Error ? error.message : 'Failed to fetch requested services');
-      console.error('Error fetching requested services:', error);
+      const errorMsg = getErrorMessage(error, 'Failed to fetch requested services');
+      setRequestedError(errorMsg);
+      logError('Fetch Requested Services', error);
     } finally {
       setRequestedLoading(false);
     }
