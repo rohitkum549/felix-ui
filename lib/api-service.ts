@@ -865,7 +865,38 @@ class FelixApiService {
     }
   }
 
-// User Profile APIs
+// Entity Management APIs
+  async getEntities() {
+    const url = `${this.baseURL}/api/entities`
+    const token = this.getCurrentToken()
+    const config: RequestInit = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    }
+    
+    console.log('Get Entities API Request URL:', url)
+    
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Get entities API error:', errorData)
+        throw new Error(errorData.error || errorData.message || `Failed to fetch entities: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      console.log('Get Entities API Response:', responseData)
+      return responseData
+    } catch (error) {
+      console.error('Error fetching entities:', error)
+      throw error
+    }
+  }
+
   async createEntity(entityData: {
     name: string
     code: string
